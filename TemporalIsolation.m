@@ -7,6 +7,8 @@
 % parameters.
 %%
 
+addpath(genpath('./matcodes'))
+
 % Set figure font to size 14
 set(0,'defaultAxesFontSize',14)
 
