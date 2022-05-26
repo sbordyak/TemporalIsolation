@@ -10,6 +10,9 @@ classdef system
 %-----------------------------------------------------------------------------------
 
 properties 
+    article_name; % Name of original paper
+    author_name; % Author of original paper
+    doi; % DOI of original paper
     insect_names; % Names of insects within system
     host_names; % Names of host plants withing system
     emergence; % Emergence values vector, initiated as a vector in the constructor (see system())
@@ -26,15 +29,47 @@ methods
     %   - Used to create an object of system class
     %   - Need to figure out which members should be required and which should not
     %-------------------------------------------------------------------------------
-    function self = system(i_names, h_names, emergence_in, longevity_in, sex_ratio_in, plant_tissue_in, plant_birth_rate_in)
+    function self = system(article_in, author_in, doi_in, ...
+                            i_names, h_names, emergence_in, ...
+                            longevity_in, sex_ratio_in, ...
+                            plant_tissue_in, plant_birth_rate_in)
         
-        insect_names = i_names;
+        if article_in != ''
+            article_name = article_in;
+        else
+            display("WARNING: NO ARTICLE NAME GIVEN");
+        end
 
-        host_names = h_names;
+        if author_in != ''
+            author_name = author_in;
+        else
+            display("WARNING: NO AUTHOR NAME GIVEN");
+        end
 
-        emergence = emergence_in;
+        if doi_in != ''
+            doi = doi_in;
+        else
+            display("WARNING: NO DOI GIVEN");
+        end
 
-        repro_viability = emergence_in + 7;
+        if i_names != ''
+            insect_names = i_names;
+        else
+            display("WARNING: NO INSECT NAMES GIVEN");
+        end
+
+        if h_names != ''
+            host_names = h_names;
+        else
+            display("WARNING: NO HOST NAMES GIVEN");
+        end
+
+        if emergence_in != 0
+            emergence = emergence_in;
+            repro_viability = emergence_in + 7;
+        else
+            display("WARNING: NO EMERGENCE VALUES GIVEN");
+        end
 
         if longevity_in != 0
             longevity = longevity_in;
