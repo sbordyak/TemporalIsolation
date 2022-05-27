@@ -1,4 +1,4 @@
-classdef system
+classdef System
 %-----------------------------------------------------------------------------------
 % System class, represents an entire insect-plant host system that is being analyzed
 %   - Work in progress
@@ -6,7 +6,10 @@ classdef system
 %   - Needs to include methods for performing analysis on self 
 %   - Maybe we can include an interpolation or convolution function in this class
 %       depending on the way it is structured?
-%   - Need to figure out which values are vital and which are not
+%   - Add properties for sexual, habitat, and temporal/allochronic isolation
+%   - Add fields to the constructor method to load values to those properties
+%   - Add method to produce value for reproductive isolation via equations 
+%       in Hood 2019
 %-----------------------------------------------------------------------------------
 
 properties 
