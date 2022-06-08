@@ -3,6 +3,7 @@ classdef Insect
 properties
     % parasite_or_host;
     names; % Names of insects within system
+    latin_names; 
     emergence; % Emergence values vector, initiated as a vector in the constructor (see system())
     repro_viability; % Reproductive viability vector, this is the emergence vector + 7
     longevity; % List of longevity values, varying length, OPTIONAL MEMBER
@@ -10,7 +11,7 @@ properties
 end
 
 methods
-    function self = Insect(names_in, emergence_in, longevity_in, sex_ratio_in)
+    function self = Insect(names_in, latin_names_in, emergence_in, longevity_in, sex_ratio_in)
         % self.parasite_or_host = poh;
 
         if names_in ~= ''
@@ -18,6 +19,13 @@ methods
         else
             display("Warning: no insect names given");
             self.names = '';
+        end
+
+        if latin_names_in ~= ''
+            self.latin_names = latin_names_in;
+        else
+            display("Warning: no latin insect names given");
+            self.latin_names = '';
         end
         
         if emergence_in ~= 0
