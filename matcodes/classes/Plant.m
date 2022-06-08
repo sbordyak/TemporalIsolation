@@ -4,7 +4,7 @@ properties
     % parasite_or_host;
     name; % Names of host plants withing system
     organ_birth_rate; % Birth/creation rate of plant organ to be used for hosting the insect species, OPTIONAL MEMBER
-    tissue;% Plant tissue availability at any time, OPTIONAL MEMBER(?)
+    tissue; % Plant tissue availability at any time
 end
 
 methods
