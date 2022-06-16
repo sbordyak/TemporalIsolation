@@ -1,0 +1,96 @@
+close all;
+
+%% Population A settings
+name_a = '';
+latin_a = '';
+% [mgx, mgy] = meshgrid(1:10,1:5);
+% result = [mgx(:), mgy(:)];
+emergence_a.mean = 120;
+emergence_a.std = 5;
+% emergence_a.mean = linspace(100,150,6);
+% emergence_a.std = linspace(10,20,6);
+tissue_a.mean = 120;
+tissue_a.std = 12;
+lifespan_a.mean = 1:1:30;
+lifespan_a.std = 1:0.5:10;
+population_a = 1000;
+
+%% Population B settings
+name_b = '';
+latin_b = '';
+emergence_b.mean = 121;
+emergence_b.std = 5;
+tissue_b.mean = 155;
+tissue_b.std = 15;
+lifespan_b.mean = 10;
+lifespan_b.std = 2;
+population_b = 1000;
+
+%% Population A and B creation
+PopA = Population(name_a, latin_a, emergence_a, lifespan_a, tissue_a, 0, population_a);
+PopB = Population(name_b, latin_b, emergence_b, lifespan_b, tissue_b, 0, population_b);
+
+%% TestModel settings
+m = length(PopA.lifespan.mean); % Dimension 1, possibly not needed
+n = length(PopA.lifespan.std); % Dimension 2, possibly not needed
+changing_variable = 1; % Changing variable, not needed with SchedulerTest
+calc_type = 'conv'; % Temporal Isolation calculation method
+cdf_type = 'normal'; % CDF calculation method
+pdf_type = 'normal'; % PDF calculation method
+longevity_plot = 1; % Longevity plot switch (1 for longevity, 0 for survival distribution
+save_switch = 0; % Save switch, 1 for save, 0 for dont save
+
+%% TestModel object creation
+ModelA = TestModel(PopA, PopB, m, n);
+
+%% TestModel running test
+%ModelA.RunTest(changing_variable, calc_type, cdf_type, pdf_type, l_or_a, save_switch);
+ModelA = ModelA.SchedulerTest(calc_type, cdf_type, pdf_type, longevity_plot, save_switch);
+
+%% Plot Heatmaps
+ModelA.HeatmapPlot(changing_variable, 1);
+ModelA.HeatmapPlot(changing_variable, 2);
+
+%% Population A settings
+name_a = '';
+latin_a = '';
+% [mgx, mgy] = meshgrid(1:10,1:5);
+% result = [mgx(:), mgy(:)];
+emergence_a.mean = 120;
+emergence_a.std = 5;
+% emergence_a.mean = linspace(100,150,6);
+% emergence_a.std = linspace(10,20,6);
+tissue_a.mean = 120;
+tissue_a.std = 12;
+lifespan_a.mean = 1:1:30;
+lifespan_a.std = 1:0.5:10;
+population_a = 1000;
+
+%% Population B settings
+name_b = '';
+latin_b = '';
+emergence_b.mean = 140;
+emergence_b.std = 5;
+tissue_b.mean = 155;
+tissue_b.std = 15;
+lifespan_b.mean = 10;
+lifespan_b.std = 2;
+population_b = 1000;
+
+%% Population A and B creation
+PopA = Population(name_a, latin_a, emergence_a, lifespan_a, tissue_a, 0, population_a);
+PopB = Population(name_b, latin_b, emergence_b, lifespan_b, tissue_b, 0, population_b);
+
+%% TestModel object creation
+ModelB = TestModel(PopA, PopB, m, n);
+
+%% TestModel running test
+%ModelA.RunTest(changing_variable, calc_type, cdf_type, pdf_type, l_or_a, save_switch);
+ModelB = ModelB.SchedulerTest(calc_type, cdf_type, pdf_type, longevity_plot, save_switch);
+
+%% Plot Heatmaps
+ModelB.HeatmapPlot(changing_variable, 1);
+ModelB.HeatmapPlot(changing_variable, 2);
+
+TestModel.CompareDifference(ModelA, ModelB, changing_variable, 1);
+TestModel.CompareDifference(ModelA, ModelB, changing_variable, 2);
