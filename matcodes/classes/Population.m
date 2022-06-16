@@ -1,14 +1,17 @@
 classdef Population
     properties 
-        name;
-        latin;
-        emergence;
-        lifespan;
-        tissue;
-        alive;
-        population;
+        name; % Practical name
+        latin; % Scientific name
+        emergence; % Emergence data
+        lifespan; % Insect lifespan data
+        tissue; % Plant tissue data
+        alive; % Alive distribution
+        population; % Population count (for RNG)
     end
     methods
+        %% Population constructor
+        %   Creates an object of type population for use with the TestModel
+        %   class
         function self = Population(name_in, latin_in, emergence_in, ...
                                     lifespan_in, tissue_in, alive_in, ...
                                     population_in);
