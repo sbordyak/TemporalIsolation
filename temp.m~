@@ -1,0 +1,87 @@
+load ./Hood19DataRaw.mat
+QgTmp = table2array(raw_emergence_Qg);
+QvTmp = table2array(raw_emergence_Qv);
+leaf_QgTmp = table2array(avg_leaf_flush_Qg);
+leaf_QvTmp = table2array(avg_leaf_flush_Qv);
+long_QgTmp = table2array(raw_longevity_Qg(:,4));
+long_QvTmp = table2array(raw_longevity_Qv(:,4));
+
+interpolation_emergence = zeros(54, 6);
+for i = 1:3
+    distTmp = [0; QgTmp(QgTmp(:,i)~=0,i); 1];
+    timeTmp = [timespan(1)-1; timespan(QgTmp(:,i)~=0); timespan(end)+1];
+    interpolation_emergence(:,i) = interp1(timeTmp, distTmp, [timespan(1)-1; timespan; timespan(end)+1], 'pchip');
+    distTmp = [0; QvTmp(QvTmp(:,i)~=0,i); 1];
+    timeTmp = [timespan(1)-1; timespan(QvTmp(:,i)~=0); timespan(end)+1];
+    interpolation_emergence(:,i+3) = interp1(timeTmp, distTmp, [timespan(1)-1; timespan; timespan(end)+1], 'pchip');
+end
+interpolation_leaf_flush = zeros(54, 2);
+distTmp = [0; leaf_QgTmp(leaf_QgTmp(:,1)~=0,1); 1];
+timeTmp = [timespan(1)-1; timespan(leaf_QgTmp(:,1)~=0); timespan(end)+1];
+interpolation_leaf_flush(:,1) = interp1(timeTmp, distTmp, [timespan(1)-1; timespan; timespan(end)+1], 'pchip');
+distTmp = [0; leaf_QvTmp(leaf_QvTmp(:,1)~=0,1); 1];
+timeTmp = [timespan(1)-1; timespan(leaf_QvTmp(:,1)~=0); timespan(end)+1];
+interpolation_leaf_flush(:,2) = interp1(timeTmp, distTmp, [timespan(1)-1; timespan; timespan(end)+1], 'pchip');
+    
+pdf_emergence = diff(interpolation_emergence);
+pdf_leaf_flush = diff(interpolation_leaf_flush);
+pdf_longevity(:,1) = diff(1-long_QgTmp);
+pdf_longevity(:,2) = diff(1-long_QvTmp);
+
+a = [0 0 0 0 0 0];
+for i = 1:6
+    for j = timespan(1):timespan(end)
+        a(i) = a(i) + j*pdf_emergence(j-62,i);
+    end
+end
+PopA.emergence.mean = mean(a(1:3)/sum(pdf_emergence(:,1:3)));
+PopB.emergence.mean = mean(a(4:6)/sum(pdf_emergence(:,4:6)));
+
+b = [0 0];
+for i = 1:2
+    for j = timespan(1):timespan(end)
+        b(i) = b(i) + j*pdf_leaf_flush(j-62,i);
+    end
+end
+PopA.tissue.mean = mean(b(1)/sum(pdf_emergence(:,1)));
+PopB.tissue.mean = mean(b(2)/sum(pdf_emergence(:,2)));
+
+c = [0 0];
+for i = 1:2
+    for j = 1:length(pdf_longevity(:,1))
+        c(i) = c(i) + j*pdf_longevity(j,i);
+    end
+end
+PopA.lifespan.mean = mean(c(1)/sum(pdf_emergence(:,1)));
+PopB.lifespan.mean = mean(c(2)/sum(pdf_emergence(:,2)));
+
+a = [0 0 0 0 0 0];
+for i = 1:3
+    for j = timespan(1):timespan(end)
+        a(i) = a(i) + (j-PopA.emergence.mean).^2 * pdf_emergence(j-62,i);
+        a(i+3) = a(i+3) + (j-PopB.emergence.mean).^2 * pdf_emergence(j-62, i+3);
+    end
+end
+a = sqrt(a);
+PopA.emergence.std = mean(a(1:3));
+PopB.emergence.std = mean(a(4:6));
+
+b = [0 0];
+for j = timespan(1):timespan(end)
+    b(1) = b(1) + (j-PopA.tissue.mean).^2 * pdf_leaf_flush(j-62,1);
+    b(2) = b(2) + (j-PopB.tissue.mean).^2 * pdf_leaf_flush(j-62,2);
+end
+b = sqrt(b);
+PopA.tissue.std = b(1);
+PopB.tissue.std = b(1);
+
+c = [0 0];
+for j = 1:length(pdf_longevity(:,1))
+    c(1) = c(1) + (j-PopA.lifespan.mean).^2 * pdf_longevity(j,1);
+    c(2) = c(2) + (j-PopB.lifespan.mean).^2 * pdf_longevity(j,2);
+end
+c = sqrt(c);
+PopA.lifespan.std = c(1);
+PopB.lifespan.std = c(1);
+
+seed = zeros(1:

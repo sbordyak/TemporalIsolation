@@ -7,6 +7,7 @@ classdef Population
         tissue; % Plant tissue data
         alive; % Alive distribution
         population; % Population count (for RNG)
+        plong;
     end
     methods
         %% Population constructor
@@ -14,7 +15,7 @@ classdef Population
         %   class
         function self = Population(name_in, latin_in, emergence_in, ...
                                     lifespan_in, tissue_in, alive_in, ...
-                                    population_in);
+                                    population_in, plong_in);
             %self.insect = Insect(name, latin, emergence, lifespan, 0);
             %self.plant = Plant('', 0, tissue);
             self.name = name_in;
@@ -24,6 +25,7 @@ classdef Population
             self.tissue = tissue_in;
             self.alive = alive_in;
             self.population = population_in;
+            self.plong = plong_in;
         end
     end
 end
