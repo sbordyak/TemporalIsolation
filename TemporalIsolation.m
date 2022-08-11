@@ -62,10 +62,12 @@ for ii = 1:length(Qv.LifeSpan)
         Qvtmp.FDpdf = makedist('normal',Qvtmp.FlowerDate,Qvtmp.FlowerSTD);
         Qvtmp.Hpdf = makedist('normal',Qvtmp.EmergeDate,Qvtmp.EmergeSTD);
         Qvtmp.LFpdf = makedist('lognormal',Qvtmp.LifeSpan,Qvtmp.LifeSpanSTD);
+        Qvtmp.LFcdf = cdf(Qvtmp.LFpdf, Qvtmp.LifeSpan);
         
         Qgtmp.FDpdf = makedist('normal',Qgtmp.FlowerDate,Qgtmp.FlowerSTD);
         Qgtmp.Hpdf = makedist('normal',Qgtmp.EmergeDate,Qgtmp.EmergeSTD);
         Qgtmp.LFpdf = makedist('lognormal',Qgtmp.LifeSpan,Qgtmp.LifeSpanSTD);
+        Qgtmp.LFcdf = cdf(Qgtmp.LFpdf, Qgtmp.LifeSpan);
         
         [TI,Qvtmp,Qgtmp] = ComputeTI_conv(Qvtmp,Qgtmp);
         

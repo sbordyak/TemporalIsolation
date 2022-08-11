@@ -118,17 +118,14 @@ classdef TestModel
         function self = SchedulerTest(self, type, cdf_type, pdf_type, longevity_plot, save_switch, egg_sites, egg_layers)
 
             %% Longevity/%alive plot settings
-            
-            if longevity_plot == 1 % Longevity plot settings
-                figure(1);
-                hold on;
+            figure(1);
+            hold on;
+            if longevity_plot % Longevity plot settings
                 set(gca,'ylim',[0 1.05]);
                 title("longevity");
                 ylabel('survivorship')
                 set(gca,'xlim',[0 15]);
-            elseif longevity_plot == 0% %alive plot settings
-                figure(1);
-                hold on;
+            else % %alive plot settings
                 set(gca,'ylim',[-0.000005 0.25]);
                 title("proportion alive");
                 %xlabel('days');
@@ -149,20 +146,16 @@ classdef TestModel
                     life.std = scheduler_slice(j,4);
                     tiss.mean = scheduler_slice(j,5);
                     tiss.std = scheduler_slice(j,6);
-                    plong.mean = scheduler_slice(j,7);
-                    plong.std = scheduler_slice(j,8);
-                    PopAtmp = Population('', '', emer, life, tiss, 0, 0, plong);
+                    PopAtmp = Population('', '', emer, life, tiss, 0, 0);
 
                     %% Create temporary Pop B slice
-                    emer.mean = scheduler_slice(j,9);
-                    emer.std = scheduler_slice(j,10);
-                    life.mean = scheduler_slice(j,11);
-                    life.std = scheduler_slice(j,12);
-                    tiss.mean = scheduler_slice(j,13);
-                    tiss.std = scheduler_slice(j,14);
-                    plong.mean = scheduler_slice(j,15);
-                    plong.std = scheduler_slice(j,16);
-                    PopBtmp = Population('', '', emer, life, tiss, 0, 0, plong);
+                    emer.mean = scheduler_slice(j,7);
+                    emer.std = scheduler_slice(j,8);
+                    life.mean = scheduler_slice(j,9);
+                    life.std = scheduler_slice(j,10);
+                    tiss.mean = scheduler_slice(j,11);
+                    tiss.std = scheduler_slice(j,12);
+                    PopBtmp = Population('', '', emer, life, tiss, 0, 0);
 
                     %% Calculate TI and distributions for Temporary Populations
                     [TI, PopAtmp, PopBtmp] = self.TemporalIsolation(type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers);
@@ -170,9 +163,7 @@ classdef TestModel
                     %display(self.TIall(i));
 
                     %% Plot Longevity/%alive
-                    if longevity_plot ~= -1
-                        self.SurvivorPlot(longevity_plot, '', PopAtmp);
-                    end
+                    %self.SurvivorPlot(longevity_plot, '', PopAtmp);
                 end
             end
             xlabel('days');
@@ -217,11 +208,9 @@ classdef TestModel
             PopAtmp.tissue.distribution = zeros(size(timespan));
             PopAtmp.emergence.distribution = zeros(size(timespan));
             PopAtmp.lifespan.distribution = zeros(size(timespan));
-            PopAtmp.plong.distribution = zeros(size(timespan));
             PopBtmp.tissue.distribution = zeros(size(timespan));
             PopBtmp.emergence.distribution = zeros(size(timespan));
             PopBtmp.lifespan.distribution = zeros(size(timespan));
-            PopBtmp.plong.distribution = zeros(size(timespan));
             
             %% Calculate distributions
             %   Use PDF for tissue and emergence distribution and 1-CDF for
@@ -238,20 +227,9 @@ classdef TestModel
             PopAtmp.lifespan.distribution = 1-cdf(tempCDF, timespan);
             tempCDF = makedist(cdf_type, PopBtmp.lifespan.mean, PopBtmp.lifespan.std);
             PopBtmp.lifespan.distribution = 1-cdf(tempCDF, timespan);
-            tempCDF = makedist(cdf_type, PopAtmp.plong.mean, PopAtmp.plong.std);
-            PopAtmp.plong.distribution = 1-cdf(tempCDF, timespan);
-            tempCDF = makedist(cdf_type, PopBtmp.plong.mean, PopBtmp.plong.std);
-            PopBtmp.plong.distribution = 1-cdf(tempCDF, timespan);
-            
-            plant_alive_A_dist = conv(PopAtmp.tissue.distribution, PopAtmp.plong.distribution);
-            plant_alive_A_dist = plant_alive_A_dist(1:365);
-            plant_alive_B_dist = conv(PopBtmp.tissue.distribution, PopBtmp.plong.distribution);
-            plant_alive_B_dist = plant_alive_B_dist(1:365);
 
-%             egg_sites_A = PopAtmp.tissue.distribution * egg_sites;
-%             egg_sites_B = PopBtmp.tissue.distribution * egg_sites;
-            egg_sites_A = plant_alive_A_dist * egg_sites;
-            egg_sites_B = plant_alive_B_dist * egg_sites;
+            egg_sites_A = PopAtmp.tissue.distribution * egg_sites;
+            egg_sites_B = PopBtmp.tissue.distribution * egg_sites;
             PopAtmp.alive = conv(PopAtmp.emergence.distribution, PopAtmp.lifespan.distribution);
             PopAtmp.alive = PopAtmp.alive(1:365);
             PopBtmp.alive = conv(PopBtmp.emergence.distribution, PopBtmp.lifespan.distribution);
@@ -385,12 +363,6 @@ classdef TestModel
                     xlabel('Population A tissue');
                     ylabel('stdev of Population A tissue');
                 end
-                if changing_variable == 4
-                    imagesc(self.PopA.plong.mean, self.PopA.plong.std, reshape(self.TIall, length(self.PopA.plong.std), []));
-                    colorbar;
-                    xlabel('Population A plant longevity');
-                    ylabel('stdev of Population A plant longevity');
-                end
             elseif pop == 2
                 if changing_variable == 1
                     imagesc(self.PopB.lifespan.mean, self.PopB.lifespan.std, reshape(self.TIall, length(self.PopB.lifespan.std), []));
@@ -409,12 +381,6 @@ classdef TestModel
                     colorbar;
                     xlabel('Population B tissue');
                     ylabel('stdev of Population B tissue');
-                end
-                if changing_variable == 4
-                    imagesc(self.PopB.plong.mean, self.PopB.plong.std, reshape(self.TIall, length(self.PopB.plong.std), []));
-                    colorbar;
-                    xlabel('Population B plant longevity');
-                    ylabel('stdev of Population B plant longevity');
                 end
             end
             title('Temporal Isolation');
@@ -443,8 +409,8 @@ classdef TestModel
         %   test given the list of settings for 12 different variables
         %   across 2 populations
         function [scheduler_tmp] = CreateScheduler(self, sets)
-            [Total{1:16}] = ndgrid(sets{:});
-            for i = 1:16
+            [Total{1:12}] = ndgrid(sets{:});
+            for i = 1:12
                 scheduler_tmp(:, i) = Total{i}(:);
             end
             scheduler_tmp = unique(scheduler_tmp, 'rows');
@@ -457,16 +423,12 @@ classdef TestModel
             sets{4} = pop1.lifespan.std;
             sets{5} = pop1.tissue.mean;
             sets{6} = pop1.tissue.std;
-            sets{7} = pop1.plong.mean;
-            sets{8} = pop1.plong.std;
-            sets{9} = pop2.emergence.mean;
-            sets{10} = pop2.emergence.std;
-            sets{11} = pop2.lifespan.mean;
-            sets{12} = pop2.lifespan.std;
-            sets{13} = pop2.tissue.mean;
-            sets{14} = pop2.tissue.std;
-            sets{15} = pop2.plong.mean;
-            sets{16} = pop2.plong.std;
+            sets{7} = pop2.emergence.mean;
+            sets{8} = pop2.emergence.std;
+            sets{9} = pop2.lifespan.mean;
+            sets{10} = pop2.lifespan.std;
+            sets{11} = pop2.tissue.mean;
+            sets{12} = pop2.tissue.std;
             self.scheduler{1,end+1} = [boolean; self.CreateScheduler(sets)];
             %self.scheduler{2,end+1} = boolean;
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
@@ -476,80 +438,6 @@ classdef TestModel
             self.scheduler{1,end+1} = [boolean; slice];
             %self.scheduler{2,end+1} = boolean;
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
-        end
-        
-        function ScheduledSlices(self, m, n, heatmap, seed)
-            names = ["Population A emergence \mu", ...
-                "Population A emergence \sigma",...
-                "Population A lifespan \mu",...
-                "Population A lifespan \sigma",...
-                "Population A tissue \mu",...
-                "Population A tissue \sigma",...
-                "Population A plant longevity \mu",...
-                "Population A plant longevity \sigma",...
-                "Population B emergence \mu", ...
-                "Population B emergence \sigma",...
-                "Population B lifespan \mu",...
-                "Population B lifespan \sigma",...
-                "Population B tissue \mu",...
-                "Population B tissue \sigma",...
-                "Population B plant longevity \mu",...
-                "Population B plant longevity \sigma"];
-
-            for k = 1:66
-                vector_switch = 1;
-                schedulerTmp = self.scheduler{k};
-                TIallTmp = self.TIall{k};
-                vectors = zeros(1,length(schedulerTmp(:,1))-1);
-                base = [];
-                for i = 1:16
-                    if schedulerTmp(1,i)==1
-                        if vector_switch == 1
-                            vectors(1,:) = schedulerTmp(2:end, i);
-                            axisnamex = names(i);
-                            vector_switch = vector_switch + 1;
-                        else
-                            vectors(2,:) = schedulerTmp(2:end, i);
-                            axisnamey = names(i);
-                            o_or_e = i;
-                        end
-                    else
-                        base(end+1) = schedulerTmp(2,i);
-                    end
-                end
-                figure();
-                ah = axes;
-                hold on;
-                p=plot(reshape(vectors(1,:), m, n).', reshape(TIallTmp(1:end), m, n),'-o', 'LineWidth',2, 'Parent', ah);
-                for i = 1:length(p)
-                    p(i).Color = [0 .5 1-(i/m)];
-                    p(i).MarkerFaceColor = [0 .5 1-(i/m)];
-                end
-                if mod(o_or_e, 2) == 1
-                    lh = legend(ah, p, "\mu = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
-                elseif mod(o_or_e, 2) == 0
-                    lh = legend(ah, p, "\sigma = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
-                end
-                ah2 = copyobj(ah,gcf);
-                delete(get(ah2,'Children'));
-                p1=plot(1:365, [1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365], 'Parent', ah2,'Visible','off');
-                set(ah2, 'Color', 'none', 'XTick', [], 'YColor', 'none', 'Box', 'Off')
-                lh2 = legend(ah2, p1,num2str(seed.'), 'Location', 'southeastoutside');
-                lh2.NumColumns = 2;
-                hold off;
-                title(legend,axisnamey)
-                xlabel(axisnamex)
-                ylabel("TI")
-                if heatmap
-                    figure();
-                    imagesc(vectors(1,:),vectors(2,:), reshape(TIallTmp, m, n).');
-                    colorbar;
-                    xlabel(axisnamex);
-                    ylabel(axisnamey);
-                    title("Temporal Isolation");
-                    set(gca,'ydir','normal');
-                end
-            end
         end
     end
     
@@ -613,7 +501,80 @@ classdef TestModel
                end
             end
         end
-        
+        function ScheduledSlices(self, m, n, heatmap)
+            vector_switch = 1;
+            names = ["Population A emergence \mu", ...
+                "Population A emergence \sigma",...
+                "Population A lifespan \mu",...
+                "Population A lifespan \sigma",...
+                "Population A tissue \mu",...
+                "Population A tissue \sigma",...
+                "Population B emergence \mu", ...
+                "Population B emergence \sigma",...
+                "Population B lifespan \mu",...
+                "Population B lifespan \sigma",...
+                "Population B tissue \mu",...
+                "Population B tissue \sigma"];
+
+            for k = 1:66
+                scheduler = self.scheduler{k};
+                TIall = self.TIall{k};
+                vectors = zeros(1,length(scheduler(:,1))-1);
+                base = [];
+                for i = 1:12
+                    if scheduler(1,i)==1
+                        if vector_switch == 1
+                            vectors(1,:) = scheduler(2:end, i);
+                            axisnamex = names(i);
+                            vector_switch = vector_switch + 1;
+                        else
+                            vectors(2,:) = scheduler(2:end, i);
+                            axisnamey = names(i);
+                            o_or_e = i;
+                        end
+                    else
+                        base(end+1) = scheduler(2,i);
+                    end
+                end
+                figure();
+                ah = axes;
+                hold on;
+                p=plot(reshape(vectors(1,:), m, n).', reshape(TIall(1:end), m, n),'-o', 'LineWidth',2, 'Parent', ah);
+                hold off;
+                for i = 1:length(p)
+                    p(i).Color = [0 .5 1-(i/m)];
+                    p(i).MarkerFaceColor = [0 .5 1-(i/m)];
+                end
+                if mod(o_or_e, 2) == 1
+                    lh = legend(ah, p, "\mu = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
+                elseif mod(o_or_e, 2) == 0
+                    lh = legend(ah, p, "\sigma = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
+                end
+                ah2 = copyobj(ah,gcf);
+                delete(get(ah2,'Children'));
+                p1=plot(1:365, [1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365], 'Parent', ah2,'Visible','off');
+                set(ah2, 'Color', 'none', 'XTick', [], 'YColor', 'none', 'Box', 'Off')
+                lh2 = legend(ah2, p1,num2str(seed.'), 'Location', 'southeastoutside');
+                lh2.NumColumns = 2;
+                title(legend,axisnamey)
+                xlabel(axisnamex)
+                ylabel("TI")
+                xlim([90 95])
+
+
+
+
+                if heatmap
+                    figure();
+                    imagesc(vectors(1,:),vectors(2,:), reshape(TIall, m, n).');
+                    colorbar;
+                    xlabel(axisnamex);
+                    ylabel(axisnamey);
+                    title("Temporal Isolation");
+                    set(gca,'ydir','normal');
+                end
+            end
+        end
         function CompareDifference(ModelA, ModelB, changing_variable, pop)
            TIallA = ModelA.TIall;
            TIallB = ModelB.TIall;

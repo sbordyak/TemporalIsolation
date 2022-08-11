@@ -1,0 +1,57 @@
+function ScheduledSlices(scheduler, TIall, m, n)
+vector_switch = 1;
+names = ["Population A emergence \mu", ...
+    "Population A emergence \sigma",...
+    "Population A lifespan \mu",...
+    "Population A lifespan \sigma",...
+    "Population A tissue \mu",...
+    "Population A tissue \sigma",...
+    "Population B emergence \mu", ...
+    "Population B emergence \sigma",...
+    "Population B lifespan \mu",...
+    "Population B lifespan \sigma",...
+    "Population B tissue \mu",...
+    "Population B tissue \sigma"];
+
+vectors = zeros(1,length(scheduler(:,1))-1);
+base = [];
+for i = 1:12
+    if scheduler(1,i)==1
+        if vector_switch == 1
+            vectors(1,:) = scheduler(2:end, i);
+            axisnamex = names(i);
+            vector_switch = vector_switch + 1;
+        else
+            vectors(2,:) = scheduler(2:end, i);
+            axisnamey = names(i);
+            o_or_e = i;
+        end
+    else
+        base(end+1) = scheduler(2,i);
+    end
+end
+figure();
+p=plot(reshape(vectors(1,:), m, n).', reshape(TIall(1:end), m, n),'-o','LineWidth',2);
+p.Color = '#00841a';
+if mod(o_or_e, 2) == 1 
+%     temp = ["\mu = " + num2str(vectors(2,1:n)).', "Base Value = " + num2str(base).'];
+%     legend("\mu = " + num2str(vectors(2,1:n).'),'FontSize',14,'NumColumns',2,'Location','northeastoutside');
+    %legend(temp,'FontSize',14,'NumColumns',2,'Location','northeastoutside');
+    legend("\mu = " + num2str(vectors(2,1:n)).','FontSize',14,'NumColumns',1,'Location','northeastoutside','LineWidth',2);
+%     legend("Base Value = " + num2str(base).','FontSize',14,'NumColumns',1,'Location','southeastoutside','LineWidth',2);
+
+
+elseif mod(o_or_e, 2) == 0
+    legend("\sigma = " + num2str(vectors(2,1:n).'),'FontSize',14,'NumColumns',2,'Location','northeastoutside','LineWidth',2);
+
+    %color command for lines
+end
+title(legend,axisnamey)
+xlabel(axisnamex)
+ylabel("TI")
+
+%switching axes or edit above if both not wanted
+%     plot(ydata,xdata)
+
+
+end

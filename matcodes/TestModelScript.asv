@@ -1,0 +1,44 @@
+close all;
+
+%% Population A settings
+name_a = '';
+latin_a = '';
+% [mgx, mgy] = meshgrid(1:10,1:5);
+% result = [mgx(:), mgy(:)];
+emergence_a.mean = 120;
+emergence_a.std = 15;
+% emergence_a.mean = linspace(100,150,6);
+% emergence_a.std = linspace(10,20,6);
+tissue_a.mean = 120;
+tissue_a.std = 12;
+lifespan_a.mean = 0:2:20;
+lifespan_a.std = 0:1:10;
+population_a = 1000;
+
+%% Population B settings
+name_b = '';
+latin_b = '';
+emergence_b.mean = 160;
+emergence_b.std = 12;
+tissue_b.mean = 155;
+tissue_b.std = 15;
+lifespan_b.mean = 1;
+lifespan_b.std = 2;
+population_b = 1000;
+
+%% Population A and B creation
+PopA = Population(name_a, latin_a, emergence_a, lifespan_a, tissue_a, 0, population_a);
+PopB = Population(name_b, latin_b, emergence_b, lifespan_b, tissue_b, 0, population_b);
+
+%% TestModel settings
+m = length(PopA.lifespan.mean); % Dimension 1, possibly not needed
+n = length(PopA.lifespan.std); % Dimension 2, possibly not needed
+changing_variable = 1; % Changing variable, not needed with SchedulerTest
+calc_type = 'conv'; % Temporal Isolation calculati
+cdf_type = 'normal';
+pdf_type = 'normal';
+l_or_a = 1;
+save_switch = 0;
+ModelA = TestModel(PopA, PopB, m, n);
+%ModelA.RunTest(changing_variable, calc_type, cdf_type, pdf_type, l_or_a, save_switch);
+ModelA.SchedulerTest(calc_type, cdf_type, pdf_type, l_or_a, save_switch);
