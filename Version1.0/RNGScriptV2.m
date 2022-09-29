@@ -1,5 +1,5 @@
 close all;
-options = {"ratio1", 'normal', 'normal', -1, 0, 500, 219};
+options = {"ratio1", 'normal', 'normal', 500, 219};
 samples = 100;
 DataExtract;
 lifespan_mean_mean = 2.5;
