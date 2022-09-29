@@ -101,10 +101,6 @@ classdef TemporalIsolationModel
             %% Calculate distributions
             %   Use PDF for tissue and emergence distribution and 1-CDF for
             %   lifespan distribution
-            tempPDF = makedist(pdf_type, PopAtmp.tissue.mean, PopAtmp.tissue.std);
-            PopAtmp.tissue.distribution = pdf(tempPDF, timespan);
-            tempPDF = makedist(pdf_type, PopBtmp.tissue.mean, PopBtmp.tissue.std);
-            PopBtmp.tissue.distribution = pdf(tempPDF, timespan);
             tempPDF = makedist(pdf_type, PopAtmp.emergence.mean, PopAtmp.emergence.std);
             PopAtmp.emergence.distribution = pdf(tempPDF, timespan);
             tempPDF = makedist(pdf_type, PopBtmp.emergence.mean, PopBtmp.emergence.std);
@@ -113,20 +109,23 @@ classdef TemporalIsolationModel
             PopAtmp.lifespan.distribution = 1-cdf(tempCDF, timespan);
             tempCDF = makedist(cdf_type, PopBtmp.lifespan.mean, PopBtmp.lifespan.std);
             PopBtmp.lifespan.distribution = 1-cdf(tempCDF, timespan);
-            tempCDF = makedist(cdf_type, PopAtmp.plong.mean, PopAtmp.plong.std);
-            PopAtmp.plong.distribution = 1-cdf(tempCDF, timespan);
-            tempCDF = makedist(cdf_type, PopBtmp.plong.mean, PopBtmp.plong.std);
-            PopBtmp.plong.distribution = 1-cdf(tempCDF, timespan);
-            
-            plant_alive_A_dist = conv(PopAtmp.tissue.distribution, PopAtmp.plong.distribution);
-            plant_alive_A_dist = plant_alive_A_dist(1:365);
-            plant_alive_B_dist = conv(PopBtmp.tissue.distribution, PopBtmp.plong.distribution);
-            plant_alive_B_dist = plant_alive_B_dist(1:365);
+            if plant_switch == 1
+                tempPDF = makedist(pdf_type, PopAtmp.tissue.mean, PopAtmp.tissue.std);
+                PopAtmp.tissue.distribution = pdf(tempPDF, timespan);
+                tempPDF = makedist(pdf_type, PopBtmp.tissue.mean, PopBtmp.tissue.std);
+                PopBtmp.tissue.distribution = pdf(tempPDF, timespan);
+                tempCDF = makedist(cdf_type, PopAtmp.plong.mean, PopAtmp.plong.std);
+                PopAtmp.plong.distribution = 1-cdf(tempCDF, timespan);
+                tempCDF = makedist(cdf_type, PopBtmp.plong.mean, PopBtmp.plong.std);
+                PopBtmp.plong.distribution = 1-cdf(tempCDF, timespan);
+                plant_alive_A_dist = conv(PopAtmp.tissue.distribution, PopAtmp.plong.distribution);
+                plant_alive_A_dist = plant_alive_A_dist(1:365);
+                plant_alive_B_dist = conv(PopBtmp.tissue.distribution, PopBtmp.plong.distribution);
+                plant_alive_B_dist = plant_alive_B_dist(1:365);
+                egg_sites_A = plant_alive_A_dist * egg_sites;
+                egg_sites_B = plant_alive_B_dist * egg_sites;
+            end
 
-%             egg_sites_A = PopAtmp.tissue.distribution * egg_sites;
-%             egg_sites_B = PopBtmp.tissue.distribution * egg_sites;
-            egg_sites_A = plant_alive_A_dist * egg_sites;
-            egg_sites_B = plant_alive_B_dist * egg_sites;
             PopAtmp.alive = conv(PopAtmp.emergence.distribution, PopAtmp.lifespan.distribution);
             PopAtmp.alive = PopAtmp.alive(1:365);
             PopBtmp.alive = conv(PopBtmp.emergence.distribution, PopBtmp.lifespan.distribution);
@@ -135,27 +134,29 @@ classdef TemporalIsolationModel
             egg_layer_B = PopBtmp.alive * egg_layers;
 
             %% %alive distribution calculated
-            if type == "ratio1"
-                for i = 1:length(PopAtmp.alive)
-                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
-                    PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
-                    PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
-                    PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
-                end
-            elseif type == "ratio2"
-                for i = 1:length(PopAtmp.alive)
-                    if egg_sites_A(i) >= egg_layer_A(i)
-                        PTratio_A = 1;
-                    else
-                        PTratio_A = 0;
+            if plant_switch == 1
+                if type == "ratio1"
+                    for i = 1:length(PopAtmp.alive)
+                        PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
+                        PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
+                        PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
+                        PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
                     end
-                    if egg_sites_B(i) >= egg_layer_B(i)
-                        PTratio_B = 1;
-                    else
-                        PTratio_B = 0;
+                elseif type == "ratio2"
+                    for i = 1:length(PopAtmp.alive)
+                        if egg_sites_A(i) >= egg_layer_A(i)
+                            PTratio_A = 1;
+                        else
+                            PTratio_A = 0;
+                        end
+                        if egg_sites_B(i) >= egg_layer_B(i)
+                            PTratio_B = 1;
+                        else
+                            PTratio_B = 0;
+                        end
+                        PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
+                        PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
                     end
-                    PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
-                    PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
                 end
             end
             
