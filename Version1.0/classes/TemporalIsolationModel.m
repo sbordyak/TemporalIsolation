@@ -1,18 +1,11 @@
-classdef TestModel
+classdef TemporalIsolationModel
     properties
         TIall; % TIall matrix, hold TI data for each test
         scheduler; % Scheduler matrix, holds each test being run at a time
     end
     methods
-        %% TestModel Constructor
-        %   Creates an object of type TestModel given 2 population objects
-        %   and the dimensions of the TIall matrix
-        function self = TestModel(pop1, pop2, boolean, scheduler_slice, pop_or_slice)
-            if pop_or_slice == 1
-                self.CreateSchedulerSlice(pop1, pop2, boolean);
-            elseif pop_or_slice == 2
-                self.UploadSchedulerSlice(scheduler_slice, boolean);
-            end
+        function self = TemporalIsolationModel(boolean, scheduler_slice)
+            self.RNGTest(scheduler_slice, boolean);
         end
 
         %% SchedulerTest
@@ -20,42 +13,28 @@ classdef TestModel
         %   allows us to create as many new tests/cases that we choose
         %   while changing any variable (across either population) that we
         %   like
-        function self = SchedulerTest(self, type, cdf_type, pdf_type, longevity_plot, save_switch, egg_sites, egg_layers)
-
-            %% Longevity/%alive plot settings
-            
-            if longevity_plot == 1 % Longevity plot settings
-                figure(1);
-                hold on;
-                set(gca,'ylim',[0 1.05]);
-                title("longevity");
-                ylabel('survivorship')
-                set(gca,'xlim',[0 15]);
-            elseif longevity_plot == 0% %alive plot settings
-                figure(1);
-                hold on;
-                set(gca,'ylim',[-0.000005 0.25]);
-                title("proportion alive");
-                %xlabel('days');
-                ylabel('survivor/emergence convolution')
-                set(gca,'xlim',[50 200]);
-            end
-
+        function self = SchedulerTest(self, type, cdf_type, pdf_type, egg_sites, egg_layers, plant_switch)
             %% Main test loop, loops through each test in Scheduler
             for i = 1:length(self.scheduler)
                 scheduler_slice = self.scheduler{i}(2:end,:);
                 for j = 1:length(scheduler_slice(:,1))
-                    %display("i = " + i + ", j = " + j);
 
                     %% Create temporary PopA slice
                     emer.mean = scheduler_slice(j,1);
                     emer.std = scheduler_slice(j,2);
                     life.mean = scheduler_slice(j,3);
                     life.std = scheduler_slice(j,4);
-                    tiss.mean = scheduler_slice(j,5);
-                    tiss.std = scheduler_slice(j,6);
-                    plong.mean = scheduler_slice(j,7);
-                    plong.std = scheduler_slice(j,8);
+                    if plant_switch == 1
+                        tiss.mean = scheduler_slice(j,5);
+                        tiss.std = scheduler_slice(j,6);
+                        plong.mean = scheduler_slice(j,7);
+                        plong.std = scheduler_slice(j,8);
+                    else
+                        tiss.mean = 0;
+                        tiss.std = 0;
+                        plong.mean = 0;
+                        plong.std = 0;
+                    end
                     PopAtmp = Population('', '', emer, life, tiss, 0, 0, plong);
 
                     %% Create temporary Pop B slice
@@ -63,28 +42,23 @@ classdef TestModel
                     emer.std = scheduler_slice(j,10);
                     life.mean = scheduler_slice(j,11);
                     life.std = scheduler_slice(j,12);
-                    tiss.mean = scheduler_slice(j,13);
-                    tiss.std = scheduler_slice(j,14);
-                    plong.mean = scheduler_slice(j,15);
-                    plong.std = scheduler_slice(j,16);
+                    if plant_switch == 1
+                        tiss.mean = scheduler_slice(j,13);
+                        tiss.std = scheduler_slice(j,14);
+                        plong.mean = scheduler_slice(j,15);
+                        plong.std = scheduler_slice(j,16);
+                    else
+                        tiss.mean = 0;
+                        tiss.std = 0;
+                        plong.mean = 0;
+                        plong.std = 0;
+                    end
                     PopBtmp = Population('', '', emer, life, tiss, 0, 0, plong);
 
                     %% Calculate TI and distributions for Temporary Populations
-                    [TI, PopAtmp, PopBtmp] = self.TemporalIsolation(type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers);
+                    [TI] = self.TemporalIsolation(type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch);
                     self.TIall{i}(j) = TI;
-                    %display(self.TIall(i));
-
-                    %% Plot Longevity/%alive
-                    if longevity_plot ~= -1
-                        self.SurvivorPlot(longevity_plot, '', PopAtmp);
-                    end
                 end
-            end
-            xlabel('days');
-
-            %% Save Longevity/%alive plot
-            if save_switch 
-                saveas(i,"fig"+string(i)+".jpg");
             end
         end
 
@@ -110,11 +84,7 @@ classdef TestModel
         % equation, room to add other calculation methods
         % - PopA, altered struct/object of population type
         % - PopB, altered struct/object of population type
-        %
-        % TODO:
-        % - Add more calculation types, add way to use other temporal
-        % isolation formulas if desired
-        function [TI, PopAtmp, PopBtmp] = TemporalIsolation(self, type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers)
+        function [TI]= TemporalIsolation(self, type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch)
             %% Declare timespan%
             timespan = 1:365;
 
@@ -165,35 +135,7 @@ classdef TestModel
             egg_layer_B = PopBtmp.alive * egg_layers;
 
             %% %alive distribution calculated
-            if type == "conv" % Convolution method
-                PopAtmp.alive = conv(PopAtmp.emergence.distribution, PopAtmp.lifespan.distribution);
-                PopAtmp.alive = PopAtmp.alive(1:365);
-                PopBtmp.alive = conv(PopBtmp.emergence.distribution, PopBtmp.lifespan.distribution);
-                PopBtmp.alive = PopBtmp.alive(1:365);
-            elseif type == "rng" % Random number generation/Monte Carlo method
-                birth_PopA = random(PopAtmp.emergence.distribution, PopAtmp.population, 1);
-                death_PopA = birth_PopA + random(PopAtmp.lifespan.distribution, PopAtmp.population, 1);
-                for i = 1:PopAtmp.population
-                    tmp(i, floor(birth_PopA(i)):ceil(death_PopA(i))) = 1;
-                end
-                
-                PopAtmp.alive = sum(tmp);
-                
-                birth_PopB = random(PopBtmp.emergence.distribution, PopBtmp.population, 1);
-                death_PopB = birth_PopB + random(PopBtmp.lifespan.distribution, PopBtmp.population, 1);
-                for i = 1:PopBtmp.population
-                    tmp(i, floor(birth_PopB(i)):ceil(death_PopB(i))) = 1;
-                end
-                
-                PopBtmp.alive = sum(tmp);
-            elseif type == "iantest"
-                PopAtmp.alive = conv(PopAtmp.emergence.distribution, PopAtmp.lifespan.distribution);
-                PopAtmp.alive = conv(PopAtmp.alive, PopAtmp.tissue.distribution);
-                PopAtmp.alive = PopAtmp.alive(1:365);
-                PopBtmp.alive = conv(PopBtmp.emergence.distribution, PopBtmp.lifespan.distribution);
-                PopBtmp.alive = conv(PopBtmp.alive, PopBtmp.tissue.distribution);
-                PopBtmp.alive = PopBtmp.alive(1:365);
-            elseif type == "ratio1"
+            if type == "ratio1"
                 for i = 1:length(PopAtmp.alive)
                     PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
                     PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
@@ -216,15 +158,6 @@ classdef TestModel
                     PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
                 end
             end
-%             
-%             figure();
-%             hold on; 
-%             plot(365,PopAtmp.emergence.distribution, 'DisplayName', 'emergence');
-%             plot(365,PopAtmp.lifespan.distribution, 'DisplayName', 'lifespan');
-%             plot(365,PopAtmp.tissue.distribution, 'DisplayName', 'tissue');
-%             hold off;
-%             figure();
-%             plot(365,PopAtmp.alive,'DisplayName','alive');
             
             %% TI calculation
             TI = 1-sum(PopAtmp.alive.*PopBtmp.alive)/sqrt(sum(PopAtmp.alive.^2)*sum(PopBtmp.alive.^2));
@@ -260,88 +193,96 @@ classdef TestModel
             sets{15} = pop2.plong.mean;
             sets{16} = pop2.plong.std;
             self.scheduler{1,end+1} = [boolean; self.CreateScheduler(sets)];
-            %self.scheduler{2,end+1} = boolean;
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
         function self = UploadSchedulerSlice(self, slice, boolean)
             self.scheduler{1,end+1} = [boolean; slice];
-            %self.scheduler{2,end+1} = boolean;
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
-        function ScheduledSlices(self, m, n, heatmap, seed)
-            names = ["Population A emergence \mu", ...
-                "Population A emergence \sigma",...
-                "Population A lifespan \mu",...
-                "Population A lifespan \sigma",...
-                "Population A tissue \mu",...
-                "Population A tissue \sigma",...
-                "Population A plant longevity \mu",...
-                "Population A plant longevity \sigma",...
-                "Population B emergence \mu", ...
-                "Population B emergence \sigma",...
-                "Population B lifespan \mu",...
-                "Population B lifespan \sigma",...
-                "Population B tissue \mu",...
-                "Population B tissue \sigma",...
-                "Population B plant longevity \mu",...
-                "Population B plant longevity \sigma"];
-
-            for k = 1:66
-                vector_switch = 1;
-                schedulerTmp = self.scheduler{k};
-                TIallTmp = self.TIall{k};
-                vectors = zeros(1,length(schedulerTmp(:,1))-1);
-                base = [];
-                for i = 1:16
-                    if schedulerTmp(1,i)==1
-                        if vector_switch == 1
-                            vectors(1,:) = schedulerTmp(2:end, i);
-                            axisnamex = names(i);
-                            vector_switch = vector_switch + 1;
-                        else
-                            vectors(2,:) = schedulerTmp(2:end, i);
-                            axisnamey = names(i);
-                            o_or_e = i;
-                        end
-                    else
-                        base(end+1) = schedulerTmp(2,i);
+        function self = RNGTest(self, stationary_variables, options, seed, boolean, em_mat, life_mat, tiss_mat, plong_mat, separation, samples, test_case, changing_variable)
+            %% RNGTest
+            % Function that takes in which variables are kept stable, a vector of
+            % options for the TestModel class, a seed vector of base values, a boolean
+            % vector of which values are being changed, emergence base value matrix,
+            % lifespan base value matrix, tissue base value matrix, plant longevity
+            % base value matrix, separation range of values to test the base values at,
+            % number of tests to perform for each value, and a test switch value to
+            % determine which test needs to be performed
+            
+                scheduler_slice = zeros(16,length(separation)*samples).';
+                sep = 0;
+                for i = 1:length(separation)*samples
+                    %% Separation calculator
+                    % Determines if enough random tests have been done at this value
+                    if mod(i-1, samples) == 0
+                        sep = sep + 1;
+                    end
+                    
+                    %% Randomization
+                    % Randomization code, uses RANDN function as part of MATLAB
+                    scheduler_slice(i,1) = em_mat(1,1,1) + em_mat(1,1,2) * randn(1);
+                    scheduler_slice(i,2) = em_mat(1,2,1) + em_mat(1,2,2) * randn(1);
+                    scheduler_slice(i,3) = life_mat(1,1,1) + life_mat(1,1,2) * randn(1);
+                    scheduler_slice(i,4) = life_mat(1,2,1) + life_mat(1,2,2) * randn(1);
+                    scheduler_slice(i,5) = tiss_mat(1,1,1) + tiss_mat(1,1,2) * randn(1);
+                    scheduler_slice(i,6) = tiss_mat(1,2,1) + tiss_mat(1,2,2) * randn(1);
+                    scheduler_slice(i,7) = plong_mat(1,1,1) + plong_mat(1,1,2) * randn(1);
+                    scheduler_slice(i,8) = plong_mat(1,2,1) + plong_mat(1,2,2) * randn(1);
+                    scheduler_slice(i,9) = em_mat(2,1,1) + em_mat(2,1,2) * randn(1);
+                    scheduler_slice(i,10) = em_mat(2,2,1) + em_mat(2,2,2) * randn(1);
+                    scheduler_slice(i,11) = life_mat(2,1,1) + life_mat(2,1,2) * randn(1);
+                    scheduler_slice(i,12) = life_mat(2,2,1) + life_mat(2,2,2) * randn(1);
+                    scheduler_slice(i,13) = tiss_mat(2,1,1) + tiss_mat(2,1,2) * randn(1);
+                    scheduler_slice(i,14) = tiss_mat(2,2,1) + tiss_mat(2,2,2) * randn(1);
+                    scheduler_slice(i,15) = plong_mat(2,1,1) + plong_mat(2,1,2) * randn(1);
+                    scheduler_slice(i,16) = plong_mat(2,2,1) + plong_mat(2,2,2) * randn(1);
+                    %% Stabilization
+                    % Keeps values that need to stay the same, the same
+                    switch stationary_variables
+                        case 1
+                            %% For 1 stationary value
+                            for j = 1:16
+                                if boolean(j) == 1
+                                    scheduler_slice(i,j) = seed(j) + separation(sep);
+                                end
+                            end
+                        case 2
+                            %% For 2 stationary values
+                            swap = 1;
+                            if changing_variable == 1
+                                for j = 1:16
+                                    if swap == 1 && boolean(j) == 1 
+                                        scheduler_slice(i,j) = seed(j) + separation(sep);
+                                        if j == 1
+                                            scheduler_slice(i,5) = scheduler_slice(i,5) + separation(sep);
+                                            end
+                                        end
+                                        swap = 2;
+                                    elseif boolean(j) == 1
+                                        scheduler_slice(i,j) = seed(j);
+                                    end
+                                end
+                            elseif changing_variable == 2
+                                for j = 1:16
+                                    if swap == 1 && boolean(j) == 1 
+                                        scheduler_slice(i,j) = seed(j);
+                                        if j == 1
+                                            scheduler_slice(i,5) = scheduler_slice(i,5) + separation(sep);
+                                            end
+                                        end
+                                        swap = 2;
+                                    elseif boolean(j) == 1
+                                        scheduler_slice(i,j) = seed(j) + separation(sep);
+                                    end
+                                end
+                            end
                     end
                 end
-                figure();
-                ah = axes;
-                hold on;
-                p=plot(reshape(vectors(1,:), m, n).', reshape(TIallTmp(1:end), m, n),'-o', 'LineWidth',2, 'Parent', ah);
-                for i = 1:length(p)
-                    p(i).Color = [0 .5 1-(i/m)];
-                    p(i).MarkerFaceColor = [0 .5 1-(i/m)];
-                end
-                if mod(o_or_e, 2) == 1
-                    lh = legend(ah, p, "\mu = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
-                elseif mod(o_or_e, 2) == 0
-                    lh = legend(ah, p, "\sigma = " + num2str(round(vectors(2,1:n).',2)),'NumColumns',2,'Location','northeastoutside');
-                end
-                ah2 = copyobj(ah,gcf);
-                delete(get(ah2,'Children'));
-                p1=plot(1:365, [1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365;1:365], 'Parent', ah2,'Visible','off');
-                set(ah2, 'Color', 'none', 'XTick', [], 'YColor', 'none', 'Box', 'Off')
-                lh2 = legend(ah2, p1,num2str(seed.'), 'Location', 'southeastoutside');
-                lh2.NumColumns = 2;
-                hold off;
-                title(legend,axisnamey)
-                xlabel(axisnamex)
-                ylabel("TI")
-                if heatmap
-                    figure();
-                    imagesc(vectors(1,:),vectors(2,:), reshape(TIallTmp, m, n).');
-                    colorbar;
-                    xlabel(axisnamex);
-                    ylabel(axisnamey);
-                    title("Temporal Isolation");
-                    set(gca,'ydir','normal');
-                end
+                self.UploadSchedulerSlice(abs(scheduler_slice(:,:)),boolean);
+            
+                self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6}, options{7});
             end
-        end
     end
 end
