@@ -1,0 +1,3 @@
+function [] = septemberPlot(model)
+    
+end
