@@ -8,6 +8,7 @@ classdef TemporalIsolationModel
         test_range; % Range of test values for stationary variables
         tests; % Number of tests per test value in test_range
         boolean; % Boolean vector of variable status, 1 = stationary variable, 0 = randomized variable
+        emergences;
     end
     methods
         %% Constructor
@@ -158,6 +159,7 @@ classdef TemporalIsolationModel
             end
             
             %% TI calculation
+            self.emergences{end+1} = { PopAtmp.alive; PopBtmp.alive };
             TI = 1-sum(PopAtmp.alive.*PopBtmp.alive)/sqrt(sum(PopAtmp.alive.^2)*sum(PopBtmp.alive.^2));
         end
 
