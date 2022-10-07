@@ -2,10 +2,28 @@ classdef TemporalIsolationModel
     properties
         TIall; % TIall matrix, hold TI data for each test
         scheduler; % Scheduler matrix, holds each test being run at a time
+        changingIndex1; % Index of first stationary variable
+        changingIndex2; % Index of second stationary variable
+        seed; % Starting values for test
+        test_range; % Range of test values for stationary variables
+        tests; % Number of tests per test value in test_range
+        boolean; % Boolean vector of variable status, 1 = stationary variable, 0 = randomized variable
     end
     methods
-        function self = TemporalIsolationModel(stationary_variables, options, seed, boolean, values_mat, separation, samples, changing_variable)
-            self.RNGTest(stationary_variables, options, seed, boolean, values_mat, separation, samples, changing_variable);
+        %% Constructor
+        %   Calls RNGTest which creates the scheduler matrix and runs the 
+        %   function that calculates Temporal Isolation for each test.
+        %
+        %   RNGTest -> Create Scheduler -> Calculate TI -> Produce TI Data for plotting
+        function self = TemporalIsolationModel(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable)
+            found = find(boolean==1);
+            self.changingIndex1 = found[1];
+            self.changingIndex2 = found[2];
+            self.seed = seed;
+            self.test_range = test_range;
+            self.tests = tests;
+            self.boolean = boolean;
+            self.RNGTest(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable);
         end
 
         %% SchedulerTest
@@ -48,28 +66,20 @@ classdef TemporalIsolationModel
             end
         end
 
-        %% ------------------------------------------------------------------
-        % TempIso function
-        % Description:
-        % Calculates the temporal isolation between 2 populations using
-        % the selected method of calculation
-        % Implemented methods of calculation include:
-        % - Convolution ('conv')
-        % - Monte-Carlo ('rng')
+        %% TempIso function
+        %   Description:
+        %   Calculates the temporal isolation between 2 populations using
+        %   the selected method of calculation
         %
-        % Inputs:
-        % - type, method of finding temporal isolation ('conv' for conv
-        % -olution, 'rng' for Monte-Carlo)
-        % - cdf_type, method of cdf calculation (see cdf function docum
-        % -entation for list of usable strings)
-        % - pdf_type, method of pdf calculation (see pdf function docum
-        % -entation for list of usable strings)
+        %   Inputs:
+        %   - type, method of finding temporal isolation ('conv' for convolution, 'rng' for Monte-Carlo)
+        %   - cdf_type, method of cdf calculation (see cdf function documentation for list of usable strings)
+        %   - pdf_type, method of pdf calculation (see pdf function documentation for list of usable strings)
         %
-        % Outputs:
-        % - TI, Temporal Isolation calculated value, using Hood 2019
-        % equation, room to add other calculation methods
-        % - PopA, altered struct/object of population type
-        % - PopB, altered struct/object of population type
+        %   Outputs:
+        %   - TI, Temporal Isolation calculated value, using Hood 2019 equation, room to add other calculation methods
+        %   - PopA, altered struct/object of population type
+        %   - PopB, altered struct/object of population type
         function [TI]= TemporalIsolation(self, type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch)
             %% Declare timespan%
             timespan = 1:365;
@@ -110,6 +120,9 @@ classdef TemporalIsolationModel
                 plant_alive_B_dist = plant_alive_B_dist(1:365);
                 egg_sites_A = plant_alive_A_dist * egg_sites;
                 egg_sites_B = plant_alive_B_dist * egg_sites;
+            else
+                egg_sites_A = egg_sites;
+                egg_sites_B = egg_sites;
             end
 
             PopAtmp.alive = conv(PopAtmp.emergence.distribution, PopAtmp.lifespan.distribution);
@@ -120,29 +133,27 @@ classdef TemporalIsolationModel
             egg_layer_B = PopBtmp.alive * egg_layers;
 
             %% %alive distribution calculated
-            if plant_switch == 1
-                if type == "ratio1"
-                    for i = 1:length(PopAtmp.alive)
-                        PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
-                        PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
-                        PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
-                        PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
+            if type == "ratio1"
+                for i = 1:length(PopAtmp.alive)
+                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
+                    PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
+                    PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
+                    PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
+                end
+            elseif type == "ratio2"
+                for i = 1:length(PopAtmp.alive)
+                    if egg_sites_A(i) >= egg_layer_A(i)
+                        PTratio_A = 1;
+                    else
+                        PTratio_A = 0;
                     end
-                elseif type == "ratio2"
-                    for i = 1:length(PopAtmp.alive)
-                        if egg_sites_A(i) >= egg_layer_A(i)
-                            PTratio_A = 1;
-                        else
-                            PTratio_A = 0;
-                        end
-                        if egg_sites_B(i) >= egg_layer_B(i)
-                            PTratio_B = 1;
-                        else
-                            PTratio_B = 0;
-                        end
-                        PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
-                        PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
+                    if egg_sites_B(i) >= egg_layer_B(i)
+                        PTratio_B = 1;
+                    else
+                        PTratio_B = 0;
                     end
+                    PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
+                    PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
                 end
             end
             
@@ -153,7 +164,7 @@ classdef TemporalIsolationModel
         %% CreateScheduler
         %   Creates a cartesian matrix (scheduler) that lists each unique
         %   test given the list of settings for 12 different variables
-        %   across 2 populations
+        %   across 2 populations.
         function [scheduler_tmp] = CreateScheduler(self, sets)
             [Total{1:16}] = ndgrid(sets{:});
             for i = 1:16
@@ -162,6 +173,9 @@ classdef TemporalIsolationModel
             scheduler_tmp = unique(scheduler_tmp, 'rows');
         end
         
+        %% CreateSchedulerSlice
+        %   Creates a slice in the z direction of the scheduler matrix to
+        %   be added to the rest of the matrix.
         function self = CreateSchedulerSlice(self, pop1, pop2, boolean)
             sets{1} = pop1.emergence.mean;
             sets{2} = pop1.emergence.std;
@@ -183,27 +197,36 @@ classdef TemporalIsolationModel
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
+        %% UploadSchedulerSlice
+        %   Uploads a scheduler slice to the object that was created outside
+        %   the class.
         function self = UploadSchedulerSlice(self, slice, boolean)
             self.scheduler{1,end+1} = [boolean; slice];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
-        function self = RNGTest(self, stationary_variables, options, seed, boolean, values_mat, separation, samples, changing_variable)
-            %% RNGTest
-            % Function that takes in which variables are kept stable, a vector of
-            % options for the TestModel class, a seed vector of base values, a boolean
-            % vector of which values are being changed, emergence base value matrix,
-            % lifespan base value matrix, tissue base value matrix, plant longevity
-            % base value matrix, separation range of values to test the base values at,
-            % number of tests to perform for each value, and a test switch value to
-            % determine which test needs to be performed
-        
-            scheduler_slice = zeros(16,length(separation)*samples).';
+        %% RNGTest
+        % Function that takes in which variables are kept stable, a vector of
+        % options for the TestModel class, a seed vector of base values, a boolean
+        % vector of which values are being changed, emergence base value matrix,
+        % lifespan base value matrix, tissue base value matrix, plant longevity
+        % base value matrix, test_range range of values to test the base values at,
+        % number of tests to perform for each value, and a test switch value to
+        % determine which test needs to be performed
+        %
+        % Options: 1 - type
+        %          2 - cdf_type
+        %          3 - pdf_type
+        %          4 - egg_sites
+        %          5 - egg_layers
+        %          6 - plant_switch
+        function self = RNGTest(self, stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable)
+            scheduler_slice = zeros(16,length(test_range)*tests).';
             sep = 0;
-            for i = 1:length(separation)*samples
-                %% Separation calculator
+            for i = 1:length(test_range)*tests
+                %% test_range calculator
                 % Determines if enough random tests have been done at this value
-                if mod(i-1, samples) == 0
+                if mod(i-1, tests) == 0
                     sep = sep + 1;
                 end
                 
@@ -217,7 +240,7 @@ classdef TemporalIsolationModel
                 scheduler_slice(i,2) = em_mat(2,1) + em_mat(2,2) * randn(1);
                 scheduler_slice(i,3) = life_mat(1,1) + life_mat(1,2) * randn(1);
                 scheduler_slice(i,4) = life_mat(2,1) + life_mat(2,2) * randn(1);
-                if options{6} == 1
+                if options{6} == 1 % If plant values are to be included
                     scheduler_slice(i,5) = tiss_mat(1,1) + tiss_mat(1,2) * randn(1);
                     scheduler_slice(i,6) = tiss_mat(2,1) + tiss_mat(2,2) * randn(1);
                     scheduler_slice(i,7) = plong_mat(1,1) + plong_mat(1,2) * randn(1);
@@ -237,7 +260,7 @@ classdef TemporalIsolationModel
                 scheduler_slice(i,10) = em_mat(2,1) + em_mat(2,2) * randn(1);
                 scheduler_slice(i,11) = life_mat(1,1) + life_mat(1,2) * randn(1);
                 scheduler_slice(i,12) = life_mat(2,1) + life_mat(2,2) * randn(1);
-                if options{6} == 1
+                if options{6} == 1 % If plant values are to be included
                     scheduler_slice(i,13) = tiss_mat(1,1) + tiss_mat(1,2) * randn(1);
                     scheduler_slice(i,14) = tiss_mat(2,1) + tiss_mat(2,2) * randn(1);
                     scheduler_slice(i,15) = plong_mat(1,1) + plong_mat(1,2) * randn(1);
@@ -256,7 +279,7 @@ classdef TemporalIsolationModel
                         %% For 1 stationary value
                         for j = 1:16
                             if boolean(j) == 1
-                                scheduler_slice(i,j) = seed(j) + separation(sep);
+                                scheduler_slice(i,j) = seed(j) + test_range(sep);
                             end
                         end
                     case 2
@@ -265,9 +288,9 @@ classdef TemporalIsolationModel
                         if changing_variable == 1
                             for j = 1:16
                                 if swap == 1 && boolean(j) == 1 
-                                    scheduler_slice(i,j) = seed(j) + separation(sep);
+                                    scheduler_slice(i,j) = seed(j) + test_range(sep);
                                     if j == 1
-                                        scheduler_slice(i,5) = scheduler_slice(i,5) + separation(sep);=
+                                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);=
                                     end
                                     swap = 2;
                                 elseif boolean(j) == 1
@@ -279,11 +302,11 @@ classdef TemporalIsolationModel
                                 if swap == 1 && boolean(j) == 1 
                                     scheduler_slice(i,j) = seed(j);
                                     if j == 1
-                                        scheduler_slice(i,5) = scheduler_slice(i,5) + separation(sep);
+                                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);
                                     end
                                     swap = 2;
                                 elseif boolean(j) == 1
-                                    scheduler_slice(i,j) = seed(j) + separation(sep);
+                                    scheduler_slice(i,j) = seed(j) + test_range(sep);
                                 end
                             end
                         end
@@ -291,12 +314,6 @@ classdef TemporalIsolationModel
             end
             self.UploadSchedulerSlice(abs(scheduler_slice(:,:)),boolean);
         
-            % Options: 1 - type
-            %          2 - cdf_type
-            %          3 - pdf_type
-            %          4 - egg_sites
-            %          5 - egg_layers
-            %          6 - plant_switch
             self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6});
         end    
     end
