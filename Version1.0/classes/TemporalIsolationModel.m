@@ -206,20 +206,20 @@ classdef TemporalIsolationModel
         end
         
         %% RNGTest
-        % Function that takes in which variables are kept stable, a vector of
-        % options for the TestModel class, a seed vector of base values, a boolean
-        % vector of which values are being changed, emergence base value matrix,
-        % lifespan base value matrix, tissue base value matrix, plant longevity
-        % base value matrix, test_range range of values to test the base values at,
-        % number of tests to perform for each value, and a test switch value to
-        % determine which test needs to be performed
+        %   Function that takes in which variables are kept stable, a vector of
+        %   options for the TestModel class, a seed vector of base values, a boolean
+        %   vector of which values are being changed, emergence base value matrix,
+        %   lifespan base value matrix, tissue base value matrix, plant longevity
+        %   base value matrix, test_range range of values to test the base values at,
+        %   number of tests to perform for each value, and a test switch value to
+        %   determine which test needs to be performed
         %
-        % Options: 1 - type
-        %          2 - cdf_type
-        %          3 - pdf_type
-        %          4 - egg_sites
-        %          5 - egg_layers
-        %          6 - plant_switch
+        %   Options: 1 - type
+        %            2 - cdf_type
+        %            3 - pdf_type
+        %            4 - egg_sites
+        %            5 - egg_layers
+        %            6 - plant_switch
         function self = RNGTest(self, stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable)
             scheduler_slice = zeros(16,length(test_range)*tests).';
             sep = 0;

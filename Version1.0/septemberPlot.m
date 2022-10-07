@@ -13,13 +13,21 @@ function [] = septemberPlot(model, saveSwitch)
 
     % Creation of separate convolution plots
     figure(1);
-    hold on;
     subplot(3,1,1);
-    % High TI Plot here
+    hold on;
+    plot([1:365], model.emergences{1}{1});
+    plot([1:365], model.emergences{1}{2});
+    hold off;
     subplot(3,2,1);
-    % Mid TI Plot here
+    hold on;
+    plot([1:365], model.emergences{midpt}{1});
+    plot([1:365], model.emergences{midpt}{2});
+    hold off;
     subplot(3,3,1);
-    % Low TI Plot here
+    hold on;
+    plot([1:365], model.emergences{lengthOfRange}{1});
+    plot([1:365], model.emergences{lengthOfRange}{2});
+    hold off;
 
     % Creation of large lineplot
     figure(2);
