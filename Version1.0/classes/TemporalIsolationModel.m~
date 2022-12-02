@@ -16,28 +16,22 @@ classdef TemporalIsolationModel
         %   function that calculates Temporal Isolation for each test.
         %
         %   RNGTest -> Create Scheduler -> Calculate TI -> Produce TI Data for plotting
-        function self = TemporalIsolationModel(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable, incremental_or_RNG)
+        function self = TemporalIsolationModel(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable)
             found = find(boolean==1);
             self.scheduler = {};
             self.changingIndex1 = found(1);
-            if sum(boolean == 1) == 2
-                self.changingIndex2 = found(2);
-            end
+            self.changingIndex2 = found(2);
             self.seed = seed;
             self.test_range = test_range;
             self.tests = tests;
             self.boolean = boolean;
-            if incremental_or_RNG == 1
-                self = self.IncrementalTest(options);
-            else
-                self = self.RNGTest(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable);
-            end
+            self = self.RNGTest(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable);
         end
 
         %% SchedulerTest
         %   New Test function based on the concept of the scheduler matrix,
         %   allows us to create as many new tests/cases that we choose
-        %   while changing any variable (across eitchangingIndex2her population) that we
+        %   while changing any variable (across either population) that we
         %   like
         function self = SchedulerTest(self, type, cdf_type, pdf_type, egg_sites, egg_layers, plant_switch)
             %% Main test loop, loops through each test in Scheduler
@@ -68,8 +62,8 @@ classdef TemporalIsolationModel
                     PopBtmp = Population('', '', emer, life, tiss, 0, 0, plong);
 
                     %% Calculate TI and distributions for Temporary Populations
-                    [TI, aliveA, aliveB] = self.TemporalIsolation(type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch);
-                    self.emergences{end+1} = [ aliveA; aliveB ];
+                    [TI] = self.TemporalIsolation(type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch);
+                    %TI;
                     self.TIall{i}(j) = TI;
                 end
             end
@@ -89,7 +83,7 @@ classdef TemporalIsolationModel
         %   - TI, Temporal Isolation calculated value, using Hood 2019 equation, room to add other calculation methods
         %   - PopA, altered struct/object of population type
         %   - PopB, altered struct/object of population type
-        function [TI, aliveA, aliveB]= TemporalIsolation(self, type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch)
+        function [TI]= TemporalIsolation(self, type, cdf_type, pdf_type, PopAtmp, PopBtmp, egg_sites, egg_layers, plant_switch)
             %% Declare timespan%
             timespan = 1:365;
 
@@ -144,8 +138,7 @@ classdef TemporalIsolationModel
             %% %alive distribution calculated
             if type == "ratio1"
                 for i = 1:length(PopAtmp.alive)
-                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);%
-
+                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
                     PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
                     PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
                     PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;
@@ -168,11 +161,7 @@ classdef TemporalIsolationModel
             end
             
             %% TI calculation
-            aliveA = PopAtmp.alive;
-            aliveB = PopBtmp.alive;
-            aliveA = PopAtmp.emergence.distribution;
-            aliveB = PopBtmp.emergence.distribution;
-            %self.emergences{end+1} = [ PopAtmp.alive; PopBtmp.alive ];
+            self = self.emergences{end+1} = [ PopAtmp.alive; PopBtmp.alive ];
             TI = 1-sum(PopAtmp.alive.*PopBtmp.alive)/sqrt(sum(PopAtmp.alive.^2)*sum(PopBtmp.alive.^2));
         end
 
@@ -218,30 +207,6 @@ classdef TemporalIsolationModel
         function self = UploadSchedulerSlice(self, slice, boolean)
             self.scheduler{end+1} = [boolean; slice];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
-        end
-        
-        function self = IncrementalTest(self, options)
-            set1 = self.test_range + self.seed(self.changingIndex1);
-            if sum(self.boolean == 1) == 2
-                set2 = self.test_range + self.seed(self.changingIndex2);
-            end
-            
-            sets = {};
-            for i = 1:16
-               if i == self.changingIndex1
-                   sets{end+1} = set1;
-               elseif i == self.changingIndex2
-                   sets{end+1} = set2;
-               else
-                   sets{end+1} = self.seed(i);
-               end
-            end
-            
-            self.scheduler{end+1} = [self.boolean; self.CreateScheduler(sets)];
-            self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
-            
-            
-            self = self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6});
         end
         
         %% RNGTest
