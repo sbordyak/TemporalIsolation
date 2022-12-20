@@ -1,3 +1,7 @@
+## TODO:
+#   - Create other models
+#
+#
 
 ## Change these to change the variables
 emergence_mean_mean_A = 70;
