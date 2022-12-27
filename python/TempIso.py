@@ -20,18 +20,28 @@ class Population:
 
 class TemporalIsolationModel:
     def __init__(self, 
-                baseValuesMatrix=[[[70,5,5,2.5],[2.5,0.5,1.2,0.2],[80,5,5,2.5],[14,2,2,0.5]], 
-                             [[70,5,5,2.5],[2.5,0.5,1.2,0.2],[60,5,5,2.5],[14,2,2,0.5]]], 
+                boolean=[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                options=['ratio1', 'normal', 'normal', 500, 219, 1],
+                baseValuesMatrix=[[[70,5,5,2.5],[2.5,0.5,1.2,0.2],[60,5,5,2.5],[14,2,2,0.5]], 
+                                  [[70,5,5,2.5],[2.5,0.5,1.2,0.2],[60,5,5,2.5],[14,2,2,0.5]]], 
                 testRange={1:10}, testCount=1):
+        self.boolean = boolean
+        self.options = options
         self.baseValuesMatrix = baseValuesMatrix
+        temp = baseValuesMatrix
+        self.seed = [temp[0][0][0], temp[0][0][2], temp[0][1][0], temp[0][1][2],
+                     temp[0][2][0], temp[0][2][2], temp[0][3][0], temp[0][3][2],
+                     temp[1][0][0], temp[1][0][2], temp[1][1][0], temp[1][1][2],
+                     temp[1][2][0], temp[1][2][2], temp[1][3][0], temp[1][3][2]]
         self.testRange = testRange
         self.testCount = testCount
+        self.RNGTest()
 
     def RNGTest(self):
         testAmount = len(self.testRange)*self.testCount
-        schedulerSlice = np.zeros(16,len(self.testRange)*self.testCount)
+        schedulerSlice = np.zeros((16,len(self.testRange)*self.testCount))
         separation = 0
-        for i in range(len(testAmount)):
+        for i in range(testAmount):
             if (i-1) % self.testCount == 0:
                 separation += 1
 
