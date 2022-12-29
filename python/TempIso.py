@@ -5,6 +5,8 @@
 #   
 
 import numpy as np
+from scipy.stats import norm
+from StatsSuite import probabilityDensity, cumulativeDistribution
 
 class Population:
     def __init__(self, name, emergence, lifespan, 
@@ -45,6 +47,16 @@ class TemporalIsolationModel:
 
     def temporalIsolation(self):
         timespan = [i for i in range(1,366)]
+
+        populationA_EmergenceDistribution = norm.pdf(timespan, self.seed[0], self.seed[1])
+        populationA_LifespanDistribution = norm.pdf(timespan, self.seed[2], self.seed[3])
+        populationB_EmergenceDistribution = norm.pdf(timespan, self.seed[8], self.seed[9])
+        populationB_LifespanDistribution = norm.pdf(timespan, self.seed[10], self.seed[11])
+        if self.plantDataInclusionSwitch == 1:
+            populationA_TissueDistribution = norm.sf(timespan, self.seed[4], self.seed[5])
+            populationA_PlantLongevityDistribution = norm.sf(timespan, self.seed[6], self.seed[7])
+            populationB_TissueDistribution = norm.sf(timespan, self.seed[12], self.seed[13])
+            populationB_PlantLongevityDistribution = norm.sf(timespan, self.seed[14], self.seed[15])
 
     def schedulerTest(self):
         return 1
