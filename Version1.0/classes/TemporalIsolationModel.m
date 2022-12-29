@@ -144,8 +144,7 @@ classdef TemporalIsolationModel
             %% %alive distribution calculated
             if type == "ratio1"
                 for i = 1:length(PopAtmp.alive)
-                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);%
-
+                    PTratio_A = min(egg_sites_A(i)/egg_layer_A(i), 1);
                     PTratio_B = min(egg_sites_B(i)/egg_layer_B(i), 1);
                     PopAtmp.alive(i) = PopAtmp.alive(i) * PTratio_A;
                     PopBtmp.alive(i) = PopBtmp.alive(i) * PTratio_B;

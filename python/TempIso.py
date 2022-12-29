@@ -52,11 +52,66 @@ class TemporalIsolationModel:
         populationA_LifespanDistribution = norm.pdf(timespan, self.seed[2], self.seed[3])
         populationB_EmergenceDistribution = norm.pdf(timespan, self.seed[8], self.seed[9])
         populationB_LifespanDistribution = norm.pdf(timespan, self.seed[10], self.seed[11])
+
         if self.plantDataInclusionSwitch == 1:
             populationA_TissueDistribution = norm.sf(timespan, self.seed[4], self.seed[5])
             populationA_PlantLongevityDistribution = norm.sf(timespan, self.seed[6], self.seed[7])
             populationB_TissueDistribution = norm.sf(timespan, self.seed[12], self.seed[13])
             populationB_PlantLongevityDistribution = norm.sf(timespan, self.seed[14], self.seed[15])
+            plantA_AliveDistribution = np.convolve(populationA_TissueDistribution, populationA_PlantLongevityDistribution)
+            plantA_AliveDistribution = plantA_AliveDistribution[0:364]
+            plantB_AliveDistribution = np.convolve(populationB_TissueDistribution, populationB_PlantLongevityDistribution)
+            plantB_AliveDistribution = plantB_AliveDistribution[0:364]
+            eggSitesA = plantA_AliveDistribution * self.numberOfEggSites
+            eggSitesB = plantB_AliveDistribution * self.numberOfEggSites
+        else:
+            eggSitesA = self.numberOfEggSites
+            eggSitesB = self.numberOfEggSites
+        
+        populationA_AliveDistribution = np.convolve(populationA_EmergenceDistribution, populationA_LifespanDistribution)
+        populationA_AliveDistribution = populationA_AliveDistribution[0:364]
+        populationB_AliveDistribution = np.convolve(populationB_EmergenceDistribution, populationB_LifespanDistribution)
+        populationB_AliveDistribution = populationB_AliveDistribution[0:364]
+        eggLayersA = populationA_AliveDistribution * self.numberOfEggLayers
+        eggLayersB = populationB_AliveDistribution * self.numberOfEggLayers
+        
+        for i in range(len(populationA_AliveDistribution)):
+            if self.ratioCalculationType == 'ratio1':
+                PTRatioA = np.min(eggSitesA[i]/eggLayersA[i], 1)
+                PTRatioB = np.min(eggSitesB[i]/eggLayersB[i], 1)
+            else:
+                if eggSitesA[i] >= eggLayersA[i]:
+                    PTRatioA = 1
+                else:
+                    PTRatioA = 0
+                if eggLayersB[i] >= eggLayersB[i]:
+                    PTRatioB = 1
+                else:
+                    PTRatioB = 0
+            populationA_AliveDistribution[i] = populationA_AliveDistribution[i] * PTRatioA
+            populationB_AliveDistribution[i] = populationB_AliveDistribution[i] * PTRatioB
+
+        #if self.ratioCalculationType == 'ratio1':
+        #   for i in range(len(populationA_AliveDistribution)):
+        #        PTRatioA = np.min(eggSitesA[i]/eggLayersA[i], 1)
+        #        PTRatioB = np.min(eggSitesB[i]/eggLayersB[i], 1)
+        #        populationA_AliveDistribution[i] = populationA_AliveDistribution[i] * PTRatioA
+        #        populationB_AliveDistribution[i] = populationB_AliveDistribution[i] * PTRatioB
+        #else:
+        #    for i in range(len(populationA_AliveDistribution)):
+        #        if eggSitesA[i] >= eggLayersA[i]:
+        #            PTRatioA = 1
+        #        else:
+        #            PTRatioA = 0
+        #        if eggLayersB[i] >= eggLayersB[i]:
+        #            PTRatioB = 1
+        #        else:
+        #            PTRatioB = 0
+        #    populationA_AliveDistribution[i] = populationA_AliveDistribution[i] * PTRatioA
+        #    populationB_AliveDistribution[i] = populationB_AliveDistribution[i] * PTRatioB
+
+        return 1-np.sum(populationA_AliveDistribution * populationB_AliveDistribution)/np.sqrt(np.sum(populationA_AliveDistribution**2)*np.sum(populationB_AliveDistribution**2))
+
 
     def schedulerTest(self):
         return 1
