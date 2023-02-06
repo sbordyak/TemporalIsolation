@@ -2,3 +2,5 @@
 .DS_Store
 # WINOS
 Thumbs.db
+*.pyc
+*.json
