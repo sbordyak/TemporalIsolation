@@ -2,12 +2,10 @@ classdef TemporalIsolationModel
     properties
         TIall; % TIall matrix, hold TI data for each test
         scheduler; % Scheduler matrix, holds each test being run at a time
-        changingIndex1; % Index of first stationary variable
-        changingIndex2; % Index of second stationary variable
         seed; % Starting values for test
         test_range; % Range of test values for stationary variables
         tests; % Number of tests per test value in test_range
-        boolean; % Boolean vector of variable status, 1 = stationary variable, 0 = randomized variable
+        settingsArray; % settingsArray vector of variable status, 1 = stationary variable, 0 = randomized variable
         emergences;
     end
     methods
@@ -16,29 +14,21 @@ classdef TemporalIsolationModel
         %   function that calculates Temporal Isolation for each test.
         %
         %   RNGTest -> Create Scheduler -> Calculate TI -> Produce TI Data for plotting
-        function self = TemporalIsolationModel(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable, incremental_or_RNG)
-            found = find(boolean==1);
+        function self = TemporalIsolationModel(stationary_variables, options, seed, settingsArray, values_mat, test_range, tests)
             self.scheduler = {};
-            self.changingIndex1 = found(1);
-            if sum(boolean == 1) == 2
-                self.changingIndex2 = found(2);
-            end
             self.seed = seed;
             self.test_range = test_range;
             self.tests = tests;
-            self.boolean = boolean;
-            if incremental_or_RNG == 1
-                self = self.IncrementalTest(options);
-            else
-                self = self.RNGTest(stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable);
-            end
+            self.settingsArray = settingsArray;
+            self.values_mat = values_mat;
+            self = self.IncrementalTest(options);
         end
 
         %% SchedulerTest
         %   New Test function based on the concept of the scheduler matrix,
         %   allows us to create as many new tests/cases that we choose
         %   while changing any variable (across eitchangingIndex2her population) that we
-        %   like
+        %   like`   
         function self = SchedulerTest(self, type, cdf_type, pdf_type, egg_sites, egg_layers, plant_switch)
             %% Main test loop, loops through each test in Scheduler
             for i = 1:length(self.scheduler)
@@ -46,25 +36,104 @@ classdef TemporalIsolationModel
                 for j = 1:length(scheduler_slice(:,1))
 
                     %% Create temporary PopA slice
-                    emer.mean = scheduler_slice(j,1);
-                    emer.std = scheduler_slice(j,2);
-                    life.mean = scheduler_slice(j,3);
-                    life.std = scheduler_slice(j,4);
-                    tiss.mean = scheduler_slice(j,5);
-                    tiss.std = scheduler_slice(j,6);
-                    plong.mean = scheduler_slice(j,7);
-                    plong.std = scheduler_slice(j,8);
+                    if incremental_or_RNG == 1 && settingsArray(1) == 0
+                        emer.mean = self.values_mat{1}(1,1) + self.values_mat{1}(1,2) * randn(1);                
+                    else
+                        emer.mean = scheduler_slice(j,1);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(2) == 0
+                        emer.std = self.values_mat{1}(2,1) + self.values_mat{1}(2,2) * randn(1);                
+                    else
+                        emer.std = scheduler_slice(j,2);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(3) == 0
+                        life.mean = self.values_mat{2}(1,1) + self.values_mat{2}(1,2) * randn(1);                
+                    else
+                        life.mean = scheduler_slice(j,3);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(4) == 0
+                        life.std = self.values_mat{2}(2,1) + self.values_mat{2}(2,2) * randn(1);                
+                    else
+                        life.std = scheduler_slice(j,4);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(5) == 0
+                        tiss.mean = self.values_mat{3}(1,1) + self.values_mat{3}(1,2) * randn(1);                
+                    else
+                        tiss.mean = scheduler_slice(j,5);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(6) == 0
+                        tiss.std = self.values_mat{3}(2,1) + self.values_mat{3}(2,2) * randn(1);                
+                    else
+                        tiss.std = scheduler_slice(j,6);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(7) == 0
+                        plong.mean = self.values_mat{4}(1,1) + self.values_mat{4}(1,2) * randn(1);                
+                    else
+                        plong.mean = scheduler_slice(j,7);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(8) == 0
+                        plong.std = self.values_mat{4}(2,1) + self.values_mat{4}(2,2) * randn(1);                
+                    else
+                        plong.std = scheduler_slice(j,8);
+                    end
                     PopAtmp = Population('', '', emer, life, tiss, 0, 0, plong);
 
-                    %% Create temporary Pop B slice
-                    emer.mean = scheduler_slice(j,9);
-                    emer.std = scheduler_slice(j,10);
-                    life.mean = scheduler_slice(j,11);
-                    life.std = scheduler_slice(j,12);
-                    tiss.mean = scheduler_slice(j,13);
-                    tiss.std = scheduler_slice(j,14);
-                    plong.mean = scheduler_slice(j,15);
-                    plong.std = scheduler_slice(j,16);
+
+                    %% Create temporary PopB slice
+                    if incremental_or_RNG == 1 && settingsArray(9) == 0
+                        emer.mean = self.values_mat{5}(1,1) + self.values_mat{5}(1,2) * randn(1);                
+                    else
+                        emer.mean = scheduler_slice(j,9);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(10) == 0
+                        emer.std = self.values_mat{5}(2,1) + self.values_mat{5}(2,2) * randn(1);                
+                    else
+                        emer.std = scheduler_slice(j,10);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(11) == 0
+                        life.mean = self.values_mat{6}(1,1) + self.values_mat{6}(1,2) * randn(1);                
+                    else
+                        life.mean = scheduler_slice(j,11);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(12) == 0
+                        life.std = self.values_mat{6}(2,1) + self.values_mat{6}(2,2) * randn(1);                
+                    else
+                        life.std = scheduler_slice(j,12);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(13) == 0
+                        tiss.mean = self.values_mat{7}(1,1) + self.values_mat{7}(1,2) * randn(1);                
+                    else
+                        tiss.mean = scheduler_slice(j,13);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(14) == 0
+                        tiss.std = self.values_mat{7}(2,1) + self.values_mat{7}(2,2) * randn(1);                
+                    else
+                        tiss.std = scheduler_slice(j,14);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(15) == 0
+                        plong.mean = self.values_mat{8}(1,1) + self.values_mat{8}(1,2) * randn(1);                
+                    else
+                        plong.mean = scheduler_slice(j,15);
+                    end
+
+                    if incremental_or_RNG == 1 && settingsArray(16) == 0
+                        plong.std = self.values_mat{8}(2,1) + self.values_mat{8}(2,2) * randn(1);                
+                    else
+                        plong.std = scheduler_slice(j,16);
+                    end
                     PopBtmp = Population('', '', emer, life, tiss, 0, 0, plong);
 
                     %% Calculate TI and distributions for Temporary Populations
@@ -190,7 +259,7 @@ classdef TemporalIsolationModel
         %% CreateSchedulerSlice
         %   Creates a slice in the z direction of the scheduler matrix to
         %   be added to the rest of the matrix.
-        function self = CreateSchedulerSlice(self, pop1, pop2, boolean)
+        function self = CreateSchedulerSlice(self, pop1, pop2, settingsArray)
             sets{1} = pop1.emergence.mean;
             sets{2} = pop1.emergence.std;
             sets{3} = pop1.lifespan.mean;
@@ -207,45 +276,40 @@ classdef TemporalIsolationModel
             sets{14} = pop2.tissue.std;
             sets{15} = pop2.plong.mean;
             sets{16} = pop2.plong.std;
-            self.scheduler{end+1} = [boolean; self.CreateScheduler(sets)];
+            self.scheduler{end+1} = [settingsArray; self.CreateScheduler(sets)];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
         %% UploadSchedulerSlice
         %   Uploads a scheduler slice to the object that was created outside
         %   the class.
-        function self = UploadSchedulerSlice(self, slice, boolean)
-            self.scheduler{end+1} = [boolean; slice];
+        function self = UploadSchedulerSlice(self, slice, settingsArray)
+            self.scheduler{end+1} = [settingsArray; slice];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         end
         
         function self = IncrementalTest(self, options)
-            set1 = self.test_range + self.seed(self.changingIndex1);
-            if sum(self.boolean == 1) == 2
-                set2 = self.test_range + self.seed(self.changingIndex2);
-            end
-            
+            locationArray = find(settingsArray==1);
+
             sets = {};
             for i = 1:16
-               if i == self.changingIndex1
-                   sets{end+1} = set1;
-               elseif i == self.changingIndex2
-                   sets{end+1} = set2;
-               else
-                   sets{end+1} = self.seed(i);
-               end
+                if ismember(i,locationArray) == 1
+                    sets{end+1} = self.seed(i) + test_range;
+                else
+                    sets{end+1} = self.seed(i);
+                end
             end
             
-            self.scheduler{end+1} = [self.boolean; self.CreateScheduler(sets)];
+            self.scheduler{end+1} = [self.settingsArray; self.CreateScheduler(sets)];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
             
             
-            self = self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6});
+            self = self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6}, options{7});
         end
         
-        %% RNGTest
+        %% RNGTest - DEPRECATED
         %   Function that takes in which variables are kept stable, a vector of
-        %   options for the TestModel class, a seed vector of base values, a boolean
+        %   options for the TestModel class, a seed vector of base values, a settingsArray
         %   vector of which values are being changed, emergence base value matrix,
         %   lifespan base value matrix, tissue base value matrix, plant longevity
         %   base value matrix, test_range range of values to test the base values at,
@@ -258,7 +322,7 @@ classdef TemporalIsolationModel
         %            4 - egg_sites
         %            5 - egg_layers
         %            6 - plant_switch
-        function self = RNGTest(self, stationary_variables, options, seed, boolean, values_mat, test_range, tests, changing_variable)
+        function self = RNGTest(self, stationary_variables, options, seed, settingsArray, values_mat, test_range, tests, changing_variable)
             scheduler_slice = zeros(16,length(test_range)*tests).';
             sep = 0;
             for i = 1:length(test_range)*tests
@@ -312,46 +376,56 @@ classdef TemporalIsolationModel
 
                 %% Stabilization
                 % Keeps values that need to stay the same, the same
-                switch stationary_variables
-                    case 1
-                        %% For 1 stationary value
-                        for j = 1:16
-                            if boolean(j) == 1
-                                scheduler_slice(i,j) = seed(j) + test_range(sep);
-                            end
-                        end
-                    case 2
-                        %% For 2 stationary values
-                        swap = 1;
-                        if changing_variable == 1
-                            for j = 1:16
-                                if swap == 1 && boolean(j) == 1 
-                                    scheduler_slice(i,j) = seed(j) + test_range(sep);
-                                    if j == 1
-                                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);
-                                    end
-                                    swap = 2;
-                                elseif boolean(j) == 1
-                                    scheduler_slice(i,j) = seed(j);
-                                end
-                            end
-                        elseif changing_variable == 2
-                            for j = 1:16
-                                if swap == 1 && boolean(j) == 1 
-                                    scheduler_slice(i,j) = seed(j);
-                                    if j == 1
-                                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);
-                                    end
-                                    swap = 2;
-                                elseif boolean(j) == 1
-                                    scheduler_slice(i,j) = seed(j) + test_range(sep);
-                                end
-                            end
-                        end
+                locationArray = find(settingsArray==1);
+                for j = locationArray
+                    if j == changing_variable
+                        scheduler_slice(i,j) = seed(j) + test_range(sep);
+                    else
+                        scheduler_slice(i,j) = seed(j);
+                    end
                 end
+
+                %% DEPRECATED FOR NOW
+                %switch stationary_variables
+                %    case 1
+                %        %% For 1 stationary value
+                %        for j = 1:16
+                %            if settingsArray(j) == 1
+                %                scheduler_slice(i,j) = seed(j) + test_range(sep);
+                %            end
+                %        end
+                %    case 2
+                %        %% For 2 stationary values
+                %        swap = 1;
+                %        if changing_variable == 1
+                %            for j = 1:16
+                %                if swap == 1 && settingsArray(j) == 1 
+                %                    scheduler_slice(i,j) = seed(j) + test_range(sep);
+                %                    if j == 1
+                %                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);
+                %                    end
+                %                    swap = 2;
+                %                elseif settingsArray(j) == 1
+                %                    scheduler_slice(i,j) = seed(j);
+                %                end
+                %            end
+                %        elseif changing_variable == 2
+                %            for j = 1:16
+                %                if swap == 1 && settingsArray(j) == 1 
+                %                    scheduler_slice(i,j) = seed(j);
+                %                    if j == 1
+                %                        scheduler_slice(i,5) = scheduler_slice(i,5) + test_range(sep);
+                %                    end
+                %                    swap = 2;
+                %                elseif settingsArray(j) == 1
+                %                    scheduler_slice(i,j) = seed(j) + test_range(sep);
+                %                end
+                %            end
+                %        end
+                %end
             end
             %scheduler_slice(:,:);
-            self.scheduler{end+1} = [boolean; abs(scheduler_slice(:,:))];
+            self.scheduler{end+1} = [settingsArray; abs(scheduler_slice(:,:))];
             self.TIall{end+1} = zeros(1, (length(self.scheduler{1}(:,1))-1));
         
             self = self.SchedulerTest(options{1}, options{2}, options{3}, options{4}, options{5}, options{6});
