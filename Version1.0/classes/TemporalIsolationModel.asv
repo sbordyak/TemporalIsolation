@@ -37,50 +37,50 @@ classdef TemporalIsolationModel
                 for j = 1:length(scheduler_slice(:,1))
 
                     %% Create temporary PopA slice
-                    if incremental_or_RNG == 1 && self.settingsArray(1) == 0
-                        emer.mean = self.values_mat{1}(1,1) + abs(self.values_mat{1}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(1) == 0
+                        emer.mean = self.values_mat{1}(1,1) + self.values_mat{1}(1,2) * randn(1);                
                     else
                         emer.mean = scheduler_slice(j,1);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(2) == 0
-                        emer.std = self.values_mat{1}(2,1) + abs(self.values_mat{1}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(2) == 0
+                        emer.std = self.values_mat{1}(2,1) + self.values_mat{1}(2,2) * randn(1);                
                     else
                         emer.std = scheduler_slice(j,2);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(3) == 0
-                        life.mean = self.values_mat{2}(1,1) + abs(self.values_mat{2}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(3) == 0
+                        life.mean = self.values_mat{2}(1,1) + self.values_mat{2}(1,2) * randn(1);                
                     else
                         life.mean = scheduler_slice(j,3);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(4) == 0
-                        life.std = self.values_mat{2}(2,1) + abs(self.values_mat{2}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(4) == 0
+                        life.std = self.values_mat{2}(2,1) + self.values_mat{2}(2,2) * randn(1);                
                     else
                         life.std = scheduler_slice(j,4);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(5) == 0
-                        tiss.mean = self.values_mat{3}(1,1) + abs(self.values_mat{3}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(5) == 0
+                        tiss.mean = self.values_mat{3}(1,1) + self.values_mat{3}(1,2) * randn(1);                
                     else
                         tiss.mean = scheduler_slice(j,5);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(6) == 0
-                        tiss.std = self.values_mat{3}(2,1) + abs(self.values_mat{3}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(6) == 0
+                        tiss.std = self.values_mat{3}(2,1) + self.values_mat{3}(2,2) * randn(1);                
                     else
                         tiss.std = scheduler_slice(j,6);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(7) == 0
-                        plong.mean = self.values_mat{4}(1,1) + abs(self.values_mat{4}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(7) == 0
+                        plong.mean = self.values_mat{4}(1,1) + self.values_mat{4}(1,2) * randn(1);                
                     else
                         plong.mean = scheduler_slice(j,7);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(8) == 0
-                        plong.std = self.values_mat{4}(2,1) + abs(self.values_mat{4}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(8) == 0
+                        plong.std = self.values_mat{4}(2,1) + self.values_mat{4}(2,2) * randn(1);                
                     else
                         plong.std = scheduler_slice(j,8);
                     end
@@ -88,50 +88,50 @@ classdef TemporalIsolationModel
 
 
                     %% Create temporary PopB slice
-                    if incremental_or_RNG == 1 && self.settingsArray(9) == 0
-                        emer.mean = self.values_mat{5}(1,1) + abs(self.values_mat{5}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(9) == 0
+                        emer.mean = self.values_mat{5}(1,1) + self.values_mat{5}(1,2) * randn(1);                
                     else
                         emer.mean = scheduler_slice(j,9);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(10) == 0
-                        emer.std = self.values_mat{5}(2,1) + abs(self.values_mat{5}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(10) == 0
+                        emer.std = self.values_mat{5}(2,1) + self.values_mat{5}(2,2) * randn(1);                
                     else
                         emer.std = scheduler_slice(j,10);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(11) == 0
-                        life.mean = self.values_mat{6}(1,1) + abs(self.values_mat{6}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(11) == 0
+                        life.mean = self.values_mat{6}(1,1) + self.values_mat{6}(1,2) * randn(1);                
                     else
                         life.mean = scheduler_slice(j,11);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(12) == 0
-                        life.std = self.values_mat{6}(2,1) + abs(self.values_mat{6}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(12) == 0
+                        life.std = self.values_mat{6}(2,1) + self.values_mat{6}(2,2) * randn(1);                
                     else
                         life.std = scheduler_slice(j,12);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(13) == 0
-                        tiss.mean = self.values_mat{7}(1,1) + abs(self.values_mat{7}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(13) == 0
+                        tiss.mean = self.values_mat{7}(1,1) + self.values_mat{7}(1,2) * randn(1);                
                     else
                         tiss.mean = scheduler_slice(j,13);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(14) == 0
-                        tiss.std = self.values_mat{7}(2,1) + abs(self.values_mat{7}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(14) == 0
+                        tiss.std = self.values_mat{7}(2,1) + self.values_mat{7}(2,2) * randn(1);                
                     else
                         tiss.std = scheduler_slice(j,14);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(15) == 0
-                        plong.mean = self.values_mat{8}(1,1) + abs(self.values_mat{8}(1,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(15) == 0
+                        plong.mean = self.values_mat{8}(1,1) + self.values_mat{8}(1,2) * randn(1);                
                     else
                         plong.mean = scheduler_slice(j,15);
                     end
 
-                    if incremental_or_RNG == 1 && self.settingsArray(16) == 0
-                        plong.std = self.values_mat{8}(2,1) + abs(self.values_mat{8}(2,2) * randn(1));                
+                    if incremental_or_RNG == 1 && settingsArray(16) == 0
+                        plong.std = self.values_mat{8}(2,1) + self.values_mat{8}(2,2) * randn(1);                
                     else
                         plong.std = scheduler_slice(j,16);
                     end

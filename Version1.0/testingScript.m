@@ -1,7 +1,6 @@
 % % ## TODO:
 % #   - Create other models
-% #
-% #
+
 
 % ## Change these to change the variables
 emergence_mean_mean_A = 70;
@@ -31,7 +30,7 @@ plong_std_std = 0.5;
             
 % ## Change these to change the settings of the model calculation
 
-% # options = {type of egg ratio calculation, type of distribution used for PDF, type of distribution used for CDF, egg site number, egg layer number, include plant variables(1) or dont(0)}
+% # options = {type of egg ratio calculation, type of distribution used for PDF, type of distribution used for CDF, egg site number, egg layer number, include plant variables(1) or dont(0), rng (1) or incremental (0)}
 options = {"ratio1", 'normal', 'normal', 500, 219, 1, 1};
 
 % # number of tests to run for randomized testing
@@ -43,18 +42,12 @@ test_range = -19:20;
 % # array of changing variables (1) and stationary variables (0) in order of: 
 % #   [emergence_mean_A, emergence_STD_A, leaf_flush_mean_A, leaf_flush_STD_A, lifespan_mean_A, lifespan_STD_A, plong_mean_A, plong_STD_A,
 % #    emergence_mean_B, emergence_STD_B, leaf_flush_mean_B, leaf_flush_STD_B, lifespan_mean_B, lifespan_STD_B, plong_mean_B, plong_STD_B]
-settingsArray = [1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0];
-
-% # which of the 1 values in the settingsArray array is changing, 1st(1), 2nd(2), etc
-changing_variable = 1;
+ternary = [1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0];
 
 % # base values for each variable in the order of:
 % #   [emergence_mean_A, emergence_STD_A, leaf_flush_mean_A, leaf_flush_STD_A, lifespan_mean_A, lifespan_STD_A, plong_mean_A, plong_STD_A,
 % #    emergence_mean_B, emergence_STD_B, leaf_flush_mean_B, leaf_flush_STD_B, lifespan_mean_B, lifespan_STD_B, plong_mean_B, plong_STD_B]
 seed = [70 5 10 5 80 5 50 5 70 5 7 5 50 5 20 5];
-
-% # switch for incremental(1) or RNG(0) test
-incremental_or_RNG = 1;
 
 % ## Don't change these, these are for variable loading
 values_mat = {};
@@ -67,7 +60,4 @@ values_mat{end+1} = [lifespan_mean_mean, lifespan_mean_std; lifespan_std_mean, l
 values_mat{end+1} = [leaf_flush_mean_mean_B, leaf_flush_mean_std_B; leaf_flush_std_mean_B, leaf_flush_std_std_B];
 values_mat{end+1} = [plong_mean_mean, plong_mean_std; plong_std_mean, plong_std_std];
 
-model = TemporalIsolationModel(sum(settingsArray(:)==1), options, seed, settingsArray, values_mat, test_range, tests);
-
-septemberPlot(model, 0, incremental_or_RNG);
-
+model = TemporalIsolationModel(sum(ternary(:)==1), options, seed, ternary, values_mat, test_range, tests);
