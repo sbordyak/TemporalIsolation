@@ -1,5 +1,5 @@
 function [] = septemberPlot(model, saveSwitch, incremental_or_RNG)
-    x = round(model.test_range + abs(model.seed(model.changingIndex1)));
+    x = round(model.test_range + abs(model.seed(1)));
 
     lengthOfRange = length(model.test_range);
     midpt = round(lengthOfRange/2);
